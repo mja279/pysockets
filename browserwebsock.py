@@ -22,7 +22,7 @@ async def hello(websocket, path):
     greeting = f"Hello {name}!"
 
     await websocket.send(greeting)
-    print(f"> {greeting}")
+    #print(f"> {greeting}")
 
 
 

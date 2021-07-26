@@ -3,8 +3,8 @@
     <head>
         <title>WebSocket demo</title>
     </head>
-    <body>
-         <form id="myForm" onsubmit="myFunction()">
+    <body onload="test()">
+        <form id="myForm" onsubmit="myFunction()">
             <label for="fname">First name:</label><br>
             <input type="text" name="fname" value="John"><br><br>
             <input type="submit" value="Submit">
@@ -12,19 +12,46 @@
 
         <script>
 
-            function myFunction() {
-                
-                var inputs = document.getElementById("myForm").elements;
-                var inputByName = inputs["fname"];
+            function test() {
+                 // open websocket
+                 var socket = new WebSocket('ws://127.0.0.1:5678'),
+                    messages = document.createElement('ul');
 
-                var ws = new WebSocket("ws://127.0.0.1:5678/");
-                ws.onopen = function(event) {
-                    console.log("WebSocket is open now.");
-                    ws.send(inputByName.value);
-                };
-
+                 socket.onopen = function() {
+                     console.log("onopen!");
+                     // Web Socket is connected. send an initial random message.
+                     socket.send("Hello!");
+                 };
+                 socket.onmessage = function() {
+                    var messages = document.getElementsByTagName('ul')[0],
+                        message = document.createElement('li'),
+                        content = document.createTextNode(event.data);
+                    message.appendChild(content);
+                    messages.appendChild(message); 
+                 };
+                 document.body.appendChild(messages);
             }
 
+
+            //function myFunction() {
+            //    var inputs = document.getElementById("myForm").elements;
+            //    var inputByName = inputs["fname"];
+
+            //    var ws = new WebSocket("ws://127.0.0.1:5678/");
+            //    ws.onopen = function(event) {
+            //        console.log("WebSocket is open now.");
+            //        ws.send(inputByName.value);
+            //    };
+            //    socket.onmessage = function() {
+            //       var messages = document.getElementsByTagName('ul')[0],
+            //           message = document.createElement('li'),
+            //           content = document.createTextNode(event.data);
+            //       message.appendChild(content);
+            //       messages.appendChild(message); 
+            //    };
+            //    document.body.appendChild(messages);
+
+            //}
             
         </script>
 
