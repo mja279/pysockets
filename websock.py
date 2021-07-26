@@ -5,6 +5,8 @@
 import asyncio
 import websockets
 
+propMessage=""
+
 async def hello(websocket, path):
     name = await websocket.recv()
     print(f"< {name}")

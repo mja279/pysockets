@@ -11,20 +11,49 @@
         </form>
 
         <script>
+            // function testState(ws) {
+            //     var state = ws.readyState;
+            //     if (state != 1) {
+            //         testState(ws);
+            //     }
+            //     return;
+            // };
 
             function myFunction() {
                 
                 var inputs = document.getElementById("myForm").elements;
                 var inputByName = inputs["fname"];
+                
+                var ws = new WebSocket("ws://127.0.0.1:5678/"),
+                messages = document.createElement('ul');
+               
+                // testState(ws);
+            
 
-                var ws = new WebSocket("ws://127.0.0.1:5678/");
-                ws.onopen = function(event) {
-                    console.log("WebSocket is open now.");
+                ws.onopen = function (event) {
+                    // console.log(ws.readyState);
                     ws.send(inputByName.value);
+                    // console.log("WebSocket is open now.");
                 };
+                // console.log(ws.readyState);
+                ws.onmessage = function (event) {
 
-            }
+                    console.log(ws.readyState);
+                    console.log("on message");
+                
+                    var messages = document.getElementsByTagName('ul')[0],
+                    message = document.createElement('li'),
+                    content = document.createTextNode(event.data);
+                    
+                    message.appendChild(content);
+                    messages.appendChild(message);
 
+                };
+                
+                document.body.appendChild(messages);
+                // console.log("on end");
+                
+            };
             
         </script>
 
