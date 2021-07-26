@@ -22,17 +22,11 @@ async def hello(websocket, path):
     name = await websocket.recv()
     print(f"< {name}")
     greeting = f"Hello {name}!"
-    print(f"> {greeting}")
 
-    async for message in websocket:    
-        message = state_event();
-        # name = await websocket.recv()
-
-        await websocket.send(message)
-        # await asyncio.sleep(random.random() * 3)
+    await websocket.send(greeting)
+    #print(f"> {greeting}")
 
 start_server = websockets.serve(hello, "127.0.0.1", 5678)
 
-# asyncio.get_event_loop().run_in_executor(None,hello)
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
