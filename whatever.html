@@ -40,17 +40,20 @@
                 var ws = new WebSocket("ws://127.0.0.1:5678/"),
                     messages = document.createElement('ul');
 
-
                 ws.onopen = function(event) {
                     console.log("WebSocket is open now.");
                     ws.send(inputByName.value);
                 };
-
+                // create ready state to prevent multiple websocket connections
                 ws.onmessage = function(event) {
+                    data = JSON.parse(event.data);
+
                     var messages = document.getElementsByTagName('ul')[0],
                         message = document.createElement('li'),
-                        content = document.createTextNode(event.data);
+                        content = document.createTextNode(event.data.slice(1, -1));
 
+                    console.log(data);
+                    console.log(event);
                     console.log(event.data);
                     message.appendChild(content);
                     messages.appendChild(message); 
