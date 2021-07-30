@@ -9,72 +9,104 @@
         <form id="myForm">
             <label for="fname">First name:</label><br>
             <input id="fname" type="text" name="fname" value="John"><br><br>
+            <button type="submit">Button</button>
         </form>
-        <button onclick="myFunction(event)">Button</button>
+        <ul id="ulist">STUFF</ul>
         <script>
-
-            var ws;
-
-            function test() {
-                 // open websocket
-                ws = new WebSocket("ws://127.0.0.1:5678/");
-
-                console.log(ws);
-            }
-
-            // function test() {
-            //      // open websocket
-            //      var socket = new WebSocket('ws://127.0.0.1:5678'),
-            //         messages = document.createElement('ul');
-
-            //      socket.onopen = function() {
-            //          console.log("onopen!");
-            //          // Web Socket is connected. send an initial random message.
-            //          socket.send("Hello!");
-            //      };
-            //      socket.onmessage = function() {
-            //         var messages = document.getElementsByTagName('ul')[0],
-            //             message = document.createElement('li'),
-            //             content = document.createTextNode(event.data);
-            //         message.appendChild(content);
-            //         messages.appendChild(message); 
-            //      };
-            //      document.body.appendChild(messages);
-            // }
-
-            function myFunction() {
-                //event.preventDefault();
-                var inputs = document.getElementById("myForm").elements;
-                var inputByName = inputs["fname"];
-                
-                //var ws = new WebSocket("ws://127.0.0.1:5678/");
-                var socket = new WebSocket("ws://127.0.0.1:5678/");
-                //var socket = ws;
-                console.log(socket);
-                var messages = document.createElement('ul');
-
-                socket.onopen = function(event) {
-                    console.log("WebSocket is open now.");
-                    socket.send(inputByName.value);
-                };
-                // create ready state to prevent multiple websocket connections
-                socket.onmessage = function(event) {
-                    data = JSON.parse(event.data);
-
-                    var messages = document.getElementsByTagName('ul')[0],
+            window.onload = function() {
+            //function test() {
+            
+              // Get references to elements on the page.
+              var form = document.getElementById('myForm').elements;
+              var messageField = form["fname"];
+              var messageList = document.getElementById('ulist');
+              console.log(messageField.value); 
+            
+              // Create a new WebSocket.
+              var socket = new WebSocket('ws://127.0.0.1:5678/');
+                                //messages = document.createElement('ul');
+            
+            
+              // Handle any errors that occur.
+              socket.onerror = function(error) {
+                console.log('WebSocket Error: ' + error);
+              };
+            
+            
+              // Show a connected message when the WebSocket is opened.
+              socket.onopen = function(event) {
+                console.log("HERE");
+                //socketStatus.innerHTML = 'Connected to: ' + event.currentTarget.url;
+                //socketStatus.className = 'open';
+              };
+            
+            
+              // Handle messages sent by the server.
+              socket.onmessage = function(event) {
+                //stuff = JSON.parse(event.data);
+                var stuff = event.data;
+                var messages = document.getElementsByTagName('ul')[0],
                         message = document.createElement('li'),
-                        content = document.createTextNode(event.data.slice(1, -1));
-
-                    console.log(data);
-                    console.log(event);
-                    console.log(event.data);
-                    message.appendChild(content);
-                    messages.appendChild(message); 
-                };
-
-
-                document.body.appendChild(messages);
-            }
+                        //content = document.createTextNode(stuff.slice(0,-1));
+                        content = document.createTextNode(stuff.value);
+                        console.log(stuff);
+                        //content = document.createTextNode(event.data.slice(1, -1));
+                //messagesList.innerHTML += '<li class="sent"><span>Sent:</span>' + message + '</li>';
+            
+                // Clear out the message field.
+                message.appendChild(content);
+                //messages.appendChild(message);
+                //messagesList.innerHTML += '<li class="received"><span>Received:</span>' + message + '</li>';
+              };
+            
+              //document.body.appendChild(messages); 
+            
+              // Show a disconnected message when the WebSocket is closed.
+              socket.onclose = function(event) {
+                socketStatus.innerHTML = 'Disconnected from WebSocket.';
+                socketStatus.className = 'closed';
+              };
+            
+            
+              // Send a message when the form is submitted.
+              myForm.onsubmit = function(e) {
+                e.preventDefault();
+            
+                // Retrieve the message from the textarea.
+                var stuff = messageField.value;
+                console.log(stuff);
+            
+                // Send the message through the WebSocket.
+                socket.send(stuff);
+                console.log("Submitted");
+            
+                // Add the message to the messages list.
+                var messages = document.getElementsByTagName('ul')[0],
+                        message = document.createElement('li'),
+                        content = document.createTextNode(stuff);
+                        //content = document.createTextNode(event.data.slice(1, -1));
+                //messagesList.innerHTML += '<li class="sent"><span>Sent:</span>' + message + '</li>';
+            
+                // Clear out the message field.
+                message.appendChild(content);
+                messages.appendChild(message);
+                //messageField.value = '';
+            
+                return false;
+              };
+              document.body.appendChild(messages); 
+            
+              // Close the WebSocket connection when the close button is clicked.
+              //closeBtn.onclick = function(e) {
+              //  e.preventDefault();
+            
+              //  // Close the WebSocket.
+              //  socket.close();
+            
+              //  return false;
+              //};
+            
+            };
             
         </script>
 
