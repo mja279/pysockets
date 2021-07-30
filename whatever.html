@@ -4,14 +4,24 @@
         <title>WebSocket demo</title>
     </head>
     <!-- <body onload="test()"> -->
-    <body>
-        <form id="myForm" onsubmit="myFunction(event)">
+    <body onload="test()">
+        <!--<form id="myForm" onsubmit="myFunction(event)">-->
+        <form id="myForm">
             <label for="fname">First name:</label><br>
-            <input type="text" name="fname" value="John"><br><br>
-            <input type="submit" value="Submit">
+            <input id="fname" type="text" name="fname" value="John"><br><br>
         </form>
-
+        <button onclick="myFunction(event)">Button</button>
         <script>
+
+            var ws;
+
+            function test() {
+                 // open websocket
+                ws = new WebSocket("ws://127.0.0.1:5678/");
+
+                console.log(ws);
+            }
+
             // function test() {
             //      // open websocket
             //      var socket = new WebSocket('ws://127.0.0.1:5678'),
@@ -33,19 +43,22 @@
             // }
 
             function myFunction() {
-                event.preventDefault();
+                //event.preventDefault();
                 var inputs = document.getElementById("myForm").elements;
                 var inputByName = inputs["fname"];
                 
-                var ws = new WebSocket("ws://127.0.0.1:5678/"),
-                    messages = document.createElement('ul');
+                //var ws = new WebSocket("ws://127.0.0.1:5678/");
+                var socket = new WebSocket("ws://127.0.0.1:5678/");
+                //var socket = ws;
+                console.log(socket);
+                var messages = document.createElement('ul');
 
-                ws.onopen = function(event) {
+                socket.onopen = function(event) {
                     console.log("WebSocket is open now.");
-                    ws.send(inputByName.value);
+                    socket.send(inputByName.value);
                 };
                 // create ready state to prevent multiple websocket connections
-                ws.onmessage = function(event) {
+                socket.onmessage = function(event) {
                     data = JSON.parse(event.data);
 
                     var messages = document.getElementsByTagName('ul')[0],
@@ -58,6 +71,7 @@
                     message.appendChild(content);
                     messages.appendChild(message); 
                 };
+
 
                 document.body.appendChild(messages);
             }
