@@ -4,7 +4,7 @@
         <title>WebSocket demo</title>
     </head>
     <!-- <body onload="test()"> -->
-    <body onload="test()">
+    <body >
         <!--<form id="myForm" onsubmit="myFunction(event)">-->
         <form id="myForm">
             <label for="fname">First name:</label><br>
@@ -17,6 +17,7 @@
             //function test() {
             
               // Get references to elements on the page.
+              var actualForm = document.getElementById('myForm');
               var form = document.getElementById('myForm').elements;
               var messageField = form["fname"];
               var messageList = document.getElementById('ulist');
@@ -45,17 +46,18 @@
               socket.onmessage = function(event) {
                 //stuff = JSON.parse(event.data);
                 var stuff = event.data;
+                console.log(stuff);
                 var messages = document.getElementsByTagName('ul')[0],
                         message = document.createElement('li'),
                         //content = document.createTextNode(stuff.slice(0,-1));
-                        content = document.createTextNode(stuff.value);
+                        content = document.createTextNode(stuff);
                         console.log(stuff);
                         //content = document.createTextNode(event.data.slice(1, -1));
                 //messagesList.innerHTML += '<li class="sent"><span>Sent:</span>' + message + '</li>';
             
                 // Clear out the message field.
                 message.appendChild(content);
-                //messages.appendChild(message);
+                messages.appendChild(message);
                 //messagesList.innerHTML += '<li class="received"><span>Received:</span>' + message + '</li>';
               };
             
@@ -69,7 +71,7 @@
             
             
               // Send a message when the form is submitted.
-              myForm.onsubmit = function(e) {
+              actualForm.onsubmit = function(e) {
                 e.preventDefault();
             
                 // Retrieve the message from the textarea.
@@ -88,8 +90,8 @@
                 //messagesList.innerHTML += '<li class="sent"><span>Sent:</span>' + message + '</li>';
             
                 // Clear out the message field.
-                message.appendChild(content);
-                messages.appendChild(message);
+                //message.appendChild(content);
+                //messages.appendChild(message);
                 //messageField.value = '';
             
                 return false;

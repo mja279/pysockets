@@ -50,18 +50,20 @@ async def time(websocket, path):
 
 async def hello(websocket, path):
 
-    # CLIENTS.add(websocket)
+    CLIENTS.add(websocket)
     
     name = await websocket.recv()
+    print ("WE HERE")
     print(f"< {name}")
     greeting = f"Hello {name}!"
 
-    await register(websocket, greeting)
+    #await register(websocket, greeting)
 
     try:
+        #while True:
         async for greeting in websocket:
-        # async for message in websocket:
-        # await websocket.send(greeting)
+            # async for message in websocket:
+            # await websocket.send(greeting)
             await asyncio.wait([client.send(greeting) for client in CLIENTS])
         # await websocket.send(state_event())
     finally:
