@@ -72,7 +72,8 @@ async def hello(websocket, path):
             ## async for message in websocket:
             ## await websocket.send(greeting)
             name = await websocket.recv()
-            greeting = f"Hello {name}!"
+            greeting = f"{name}"
+            #greeting = f"Hello {name}!"
             message = greeting
             print("HOW MANY TIMES???")
             #await notify_clients(message)
