@@ -102,7 +102,7 @@ async def hello(websocket, path):
     #print(f"> {greeting}")
     # await asyncio.sleep(1)
 
-start_server = websockets.serve(hello, "ec2-35-153-101-189.compute-1.amazonaws.com", 5678)
+start_server = websockets.serve(hello, "35.153.101.189", 5678)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
