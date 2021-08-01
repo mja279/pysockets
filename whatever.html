@@ -15,12 +15,13 @@
         <script>
             window.onload = function() {
             //function test() {
-            
+              console.log("JUST LOADED"); 
               // Get references to elements on the page.
               var actualForm = document.getElementById('myForm');
               var form = document.getElementById('myForm').elements;
               var messageField = form["fname"];
               var messageList = document.getElementById('ulist');
+              var messages = document.getElementsByTagName('ul')[0];
               console.log(messageField.value); 
             
               // Create a new WebSocket.
@@ -92,10 +93,14 @@
                 // Clear out the message field.
                 //message.appendChild(content);
                 //messages.appendChild(message);
+                //document.body.appendChild(messages); 
                 //messageField.value = '';
             
                 return false;
+                //socket.onmessage(e);
               };
+
+              console.log("ARE WE GETTING HERE?");
               document.body.appendChild(messages); 
             
               // Close the WebSocket connection when the close button is clicked.

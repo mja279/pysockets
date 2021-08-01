@@ -52,21 +52,37 @@ async def hello(websocket, path):
 
     CLIENTS.add(websocket)
     
-    name = await websocket.recv()
-    print ("WE HERE")
-    print(f"< {name}")
-    greeting = f"Hello {name}!"
-
+    #name = await websocket.recv()
+    #print("ACCEPTING WEBSOCKET CONNECTION FROM CLIENT!!!")
+    #print ("WE HERE")
+    #print(f"< {name}")
+    #greeting = f"Hello {name}!"
+    print("IT IS WORKING!!!")
+    dumbassBool = True;
     #await register(websocket, greeting)
 
     try:
-        #while True:
-        async for greeting in websocket:
-            # async for message in websocket:
-            # await websocket.send(greeting)
-            await asyncio.wait([client.send(greeting) for client in CLIENTS])
+        while dumbassBool:
+            #CLIENTS.add(conn)
+            #name = await websocket.recv()
+            #print("ACCEPTING WEBSOCKET CONNECTION FROM CLIENT!!!")
+            #print ("WE HERE")
+            #print(f"< {name}")
+            #greeting = f"Hello {name}!"
+            ## async for message in websocket:
+            ## await websocket.send(greeting)
+            name = await websocket.recv()
+            greeting = f"Hello {name}!"
+            message = greeting
+            print("HOW MANY TIMES???")
+            #await notify_clients(message)
+            #async for conn in websocket:
+                #message = greeting
+            await asyncio.wait([client.send(message) for client in CLIENTS])
+                #print("IT IS WORKING ASYNC!!!")
         # await websocket.send(state_event())
     finally:
+        dumbassBool = False;
         print("killing connection")
         CLIENTS.remove(websocket)
 
