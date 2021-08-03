@@ -135,12 +135,12 @@ async def goodbye(websocket, path):
             # message = greeting
             # print(f"{name[0]}")
             # print(name[0])
-            print(name)
+            print(json.dumps(name))
             print("HOW MANY TIMES???")
             #await notify_clients(message)
             #async for conn in websocket:
                 #message = greeting
-            await asyncio.wait([client.send(name) for client in CLIENTS])
+            await asyncio.wait([client.send(json.dumps(name)) for client in CLIENTS])
                 #print("IT IS WORKING ASYNC!!!")
         # await websocket.send(state_event())
     finally:
@@ -193,8 +193,8 @@ async def goodbye(websocket, path):
 #                 cv2.destroyAllWindows()
 #                 break
 
-#start_server = websockets.serve(shareScreen, "127.0.0.1", 5678)
-#start_server = websockets.serve(hello, "127.0.0.1", 5678)
+# start_server = websockets.serve(shareScreen, "127.0.0.1", 5678)
+# start_server = websockets.serve(hello, "127.0.0.1", 5678)
 start_server = websockets.serve(goodbye, "127.0.0.1", 5678)
 
 asyncio.get_event_loop().run_until_complete(start_server)
