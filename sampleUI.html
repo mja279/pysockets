@@ -11,16 +11,70 @@
         <strong>Log:</strong>
         <br>
         <pre id="log"></pre>
-
+        
         <script>
+          window.onload = function() {
+            var socket = new WebSocket("ws://127.0.0.1:5678/");
+
             //var socket = new WebSocket('ws://127.0.0.1:5678/');
             const videoElem = document.getElementById("video");
             const logElem = document.getElementById("log");
             const startElem = document.getElementById("start");
             const stopElem = document.getElementById("stop");
+            var trackList = [];
+            var isSharing = false;
+
+            socket.onmessage = function (evt) {
+              if(!isSharing) {
+                var stuff = evt.data;
+                console.log(stuff);
+                console.log(stuff.length);
+                inboundStream = new MediaStream(stuff);
+                videoElem.srcObject = inboundStream;
+                // stuff.forEach(track => inboundStream.addTrack(track));
+                // inboundStream.addTrack(stuff[0]);
+              }
+              // console.log(evt.data.streams);
+              // console.log(evt.streams);
+              
+              // if(typeof stuff == "MediaStreamTrack") {
+              //   trackList.push(stuff);
+              //   // var pc;
+                // for (const track of trackList.getTracks()) {
+                //   pc.addTrack(track);
+                //   console.log(track);
+                // }
+  
+              //   // videoElem = pc;
+              //   // videoElem.innerHTML = stuff;
+              //   // videoElem.srcObject.addTrack(stuff);
+              //   console.log(stuff);
+              // }else if(typeof stuff == "MediaStream") {
+              //   trackList.forEach(track => videoElem.srcObject.addTrack(track));
+              //   console.log(videoElem.srcObject);
+              // };
+
+
+              // pc.ontrack = ev => {
+              //   if (ev.streams && ev.streams[0]) {
+              //     videoElem.srcObject = ev.streams[0];
+              //   } else {
+              //     if (!inboundStream) {
+              // inboundStream = new MediaStream();
+              // videoElem.srcObject = inboundStream;
+              //     }
+              // inboundStream.addTrack(stuff.track);
+              //   }
+              // }
+              
+              // for (const track of evt.data.getTracks()) {
+              //   pc.addTrack(track);
+              //   console.log(track);
+              // }
+              // inboundStream.addTrack(stuff.track);
+            }
             
             // Options for getDisplayMedia()
-            
             var displayMediaOptions = {
               video: {
                 cursor: "always"
@@ -36,38 +90,49 @@
             stopElem.addEventListener("click", function(evt) {
               stopCapture();
             }, false);
-
+  
             console.log = msg => logElem.innerHTML += `${msg}<br>`;
             console.error = msg => logElem.innerHTML += `<span class="error">${msg}</span><br>`;
             console.warn = msg => logElem.innerHTML += `<span class="warn">${msg}<span><br>`;
             console.info = msg => logElem.innerHTML += `<span class="info">${msg}</span><br>`;
-
+  
             async function startCapture() {
+  
                 //console.log(socket);
                 logElem.innerHTML = "";
-                
+                console.log("HERE-0");
+                var trackList = [];
+                isSharing = true;
                 try {
-                  videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
-                  socket.onopen = function(event) {
-                    //socket.send(videoElem.srcObject();
-                    console.log("HERE");
-                    console.log(socket);
-                    //socketStatus.innerHTML = 'Connected to: ' + event.currentTarget.url;
-                    //socketStatus.className = 'open';
-                  };
-                  dumpOptionsInfo();
+                  stuff = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                  // socket.onopen = function(event) {
+                  console.log(stuff);
+                  // while (stuff.active) {
+                    for (const track of stuff.getTracks()) {
+                      console.log(track);
+                      trackList.push(track);
+                    }
+                    // socket.send(trackList);
+                    socket.send(stuff);
+                    //   console.log("HERE");
+                    //   console.log(socket);
+                    //   //socketStatus.innerHTML = 'Connected to: ' + event.currentTarget.url;
+                    //   //socketStatus.className = 'open';
+                    // };
+                    dumpOptionsInfo();
+                  // }
                 } catch(err) {
                   console.error("Error: " + err);
                 }
             }
-
+  
             function stopCapture(evt) {
                 let tracks = videoElem.srcObject.getTracks();
                 
                 tracks.forEach(track => track.stop());
                 videoElem.srcObject = null;
             }
-
+  
             function dumpOptionsInfo() {
                 const videoTrack = videoElem.srcObject.getVideoTracks()[0];
                 
@@ -76,6 +141,8 @@
                 console.info("Track constraints:");
                 console.info(JSON.stringify(videoTrack.getConstraints(), null, 2));
             }
+          }
+
 
         </script>
     </body>
