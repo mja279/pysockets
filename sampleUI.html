@@ -26,11 +26,14 @@
 
             socket.onmessage = function (evt) {
               if(!isSharing) {
-                var stuff = evt.data;
-                console.log(stuff);
-                console.log(stuff.length);
-                inboundStream = new MediaStream(stuff);
+                stuff = evt.data;
+                // console.log(stuff);
+                // console.log(stuff.length);
+                let inboundStream = new MediaStream();
+                // console.log(inboundStream);
                 videoElem.srcObject = inboundStream;
+                // console.log(videoElem.srcObject);
+                inboundStream.addTrack(stuff);
                 // stuff.forEach(track => inboundStream.addTrack(track));
                 // inboundStream.addTrack(stuff[0]);
               }
@@ -108,12 +111,15 @@
                   // socket.onopen = function(event) {
                   console.log(stuff);
                   // while (stuff.active) {
-                    for (const track of stuff.getTracks()) {
-                      console.log(track);
-                      trackList.push(track);
-                    }
-                    // socket.send(trackList);
-                    socket.send(stuff);
+                    // for (const track of stuff.getTracks()[0]) {
+                    //   console.log(track);
+                    //   console.log(track);
+                    //   trackList.push(track);
+                    // }
+                    // console.log(stuff.id);
+                    console.log(stuff.getTracks());
+                    socket.send(JSON.stringify(stuff));
+                    // socket.send(stuff);
                     //   console.log("HERE");
                     //   console.log(socket);
                     //   //socketStatus.innerHTML = 'Connected to: ' + event.currentTarget.url;

@@ -133,6 +133,9 @@ async def goodbye(websocket, path):
             # greeting = f"{name}"
             #greeting = f"Hello {name}!"
             # message = greeting
+            # print(f"{name[0]}")
+            # print(name[0])
+            print(name)
             print("HOW MANY TIMES???")
             #await notify_clients(message)
             #async for conn in websocket:
