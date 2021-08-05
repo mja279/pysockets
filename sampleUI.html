@@ -13,9 +13,10 @@
         <pre id="log"></pre>
         
         <script>
+          var stuff;
           window.onload = function() {
             var socket = new WebSocket("ws://127.0.0.1:5678/");
-
+      
             //var socket = new WebSocket('ws://127.0.0.1:5678/');
             const videoElem = document.getElementById("video");
             const logElem = document.getElementById("log");
@@ -110,6 +111,11 @@
                   stuff = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
                   // socket.onopen = function(event) {
                   console.log(stuff);
+                  
+                  if ( stuff.getTracks()[0] !== "" ) {
+                    console.log(JSON.stringify(displayMediaOptions));
+                    socket.send(stuff.getTracks());
+                  }
                   // while (stuff.active) {
                     // for (const track of stuff.getTracks()[0]) {
                     //   console.log(track);
@@ -117,8 +123,8 @@
                     //   trackList.push(track);
                     // }
                     // console.log(stuff.id);
-                    console.log(stuff.getTracks());
-                    socket.send(JSON.stringify(stuff));
+                    // console.log(JSON.stringify(displayMediaOptions));
+                    // socket.send(JSON.stringify(stuff.getTracks()));
                     // socket.send(stuff);
                     //   console.log("HERE");
                     //   console.log(socket);

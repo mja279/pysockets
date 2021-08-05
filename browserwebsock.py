@@ -116,9 +116,9 @@ async def goodbye(websocket, path):
     #print(f"< {name}")
     #greeting = f"Hello {name}!"
     print("IT IS WORKING!!!")
-    dumbassBool = True;
+    dumbassBool = True
     #await register(websocket, greeting)
-
+    name = []
     try:
         while dumbassBool:
             #CLIENTS.add(conn)
@@ -128,19 +128,19 @@ async def goodbye(websocket, path):
             #print(f"< {name}")
             #greeting = f"Hello {name}!"
             ## async for message in websocket:
-            name = await websocket.recv()
+            name[0] = await websocket.recv()
             ## await websocket.send(greeting)
             # greeting = f"{name}"
             #greeting = f"Hello {name}!"
             # message = greeting
             # print(f"{name[0]}")
             # print(name[0])
-            print(json.dumps(name))
+            print(name[0])
             print("HOW MANY TIMES???")
             #await notify_clients(message)
             #async for conn in websocket:
                 #message = greeting
-            await asyncio.wait([client.send(json.dumps(name)) for client in CLIENTS])
+            await asyncio.wait([client.send(name[0]) for client in CLIENTS])
                 #print("IT IS WORKING ASYNC!!!")
         # await websocket.send(state_event())
     finally:
