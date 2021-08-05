@@ -26,15 +26,22 @@
             var isSharing = false;
 
             socket.onmessage = function (evt) {
+              console.log(isSharing);
               if(!isSharing) {
                 stuff = evt.data;
-                // console.log(stuff);
+                console.log("STUFF BELOW!!!");
+                console.log(stuff);
                 // console.log(stuff.length);
                 let inboundStream = new MediaStream();
+                console.log("AM I AT LEAST GETTING HERE?");
                 // console.log(inboundStream);
+                //videoElem.srcObject = stuff.clone();
+                console.log("HOW ABOUT HERE?");
                 videoElem.srcObject = inboundStream;
-                // console.log(videoElem.srcObject);
-                inboundStream.addTrack(stuff);
+                console.log(videoElem.srcObject);
+
+                //inboundStream.addTrack();
+
                 // stuff.forEach(track => inboundStream.addTrack(track));
                 // inboundStream.addTrack(stuff[0]);
               }
@@ -100,6 +107,8 @@
             console.warn = msg => logElem.innerHTML += `<span class="warn">${msg}<span><br>`;
             console.info = msg => logElem.innerHTML += `<span class="info">${msg}</span><br>`;
   
+
+            //START CAPTURE HERE
             async function startCapture() {
   
                 //console.log(socket);
@@ -125,6 +134,8 @@
                     // console.log(stuff.id);
                     // console.log(JSON.stringify(displayMediaOptions));
                     // socket.send(JSON.stringify(stuff.getTracks()));
+                    console.log(stuff.getTracks());
+                    socket.send(stuff.getTracks());
                     // socket.send(stuff);
                     //   console.log("HERE");
                     //   console.log(socket);
