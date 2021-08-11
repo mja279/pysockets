@@ -23,73 +23,62 @@
             const stopElem = document.getElementById("stop");
             var trackList = [];
             var isSharing = false;
+            local = new RTCPeerConnection();
 
             socket.onmessage = function (evt) {
               console.log(isSharing);
               if(!isSharing) {
                 remote = new RTCPeerConnection();
                 stuff = evt.data;
-                customJSON = JSON.parse(stuff)
-                layerTwoJSON = JSON.parse(customJSON);
+                console.log(stuff);
+                customJSON = JSON.parse(stuff);
+                //layerTwoJSON = JSON.parse(customJSON);
                 console.log(customJSON);
-                console.log(layerTwoJSON.sdp.sdp);
-                layerThreeJSON = layerTwoJSON.sdp.sdp += "\n";
-                remote.setRemoteDescription(String(layerThreeJSON));
+                //console.log(layerTwoJSON.sdp.sdp);
+                //layerThreeJSON = layerTwoJSON.sdp.sdp += "\n";
+                remote.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+                //remoteStuff = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                //for (const track of remoteStuff.getVideoTracks()) {
+                //  //trackList.push(track);
+                //  remote.addTrack(track);
+                //}
+
+                //remote.ontrack = ev => {
+                //  if (ev.streams && ev.streams[0]) {
+                //    videoElem.srcObject = ev.streams[0];
+                //  } else {
+                //    let inboundStream = new MediaStream(ev.track);
+                //    videoElem.srcObject = inboundStream;
+                //  }
+                //}
+
+                remote.createAnswer().then(function(answer) {
+                  return remote.setLocalDescription(answer);
+                })
+                .then(function() {
+                  socket.send(JSON.stringify({
+                    name: "remote",
+                    type: "video-answer",
+                    sdp: remote.localDescription
+                  }));
+                })
+                .catch(function(reason) {
+                  // An error occurred, so handle the failure to connect
+                });
                 console.log("STUFF BELOW!!!");
-                //console.log(stuff);
-                // console.log(stuff.length);
                 let inboundStream = new MediaStream();
                 console.log("AM I AT LEAST GETTING HERE?");
-                // console.log(inboundStream);
-                //videoElem.srcObject = stuff.clone();
                 console.log("HOW ABOUT HERE?");
                 videoElem.srcObject = inboundStream;
                 console.log(videoElem.srcObject);
 
-                //inboundStream.addTrack();
-
-                // stuff.forEach(track => inboundStream.addTrack(track));
-                // inboundStream.addTrack(stuff[0]);
+                    
               }
-              // console.log(evt.data.streams);
-              // console.log(evt.streams);
-              
-              // if(typeof stuff == "MediaStreamTrack") {
-              //   trackList.push(stuff);
-              //   // var pc;
-                // for (const track of trackList.getTracks()) {
-                //   pc.addTrack(track);
-                //   console.log(track);
-                // }
-  
-              //   // videoElem = pc;
-              //   // videoElem.innerHTML = stuff;
-              //   // videoElem.srcObject.addTrack(stuff);
-              //   console.log(stuff);
-              // }else if(typeof stuff == "MediaStream") {
-              //   trackList.forEach(track => videoElem.srcObject.addTrack(track));
-              //   console.log(videoElem.srcObject);
-              // };
+             }
 
-
-              // pc.ontrack = ev => {
-              //   if (ev.streams && ev.streams[0]) {
-              //     videoElem.srcObject = ev.streams[0];
-              //   } else {
-              //     if (!inboundStream) {
-              // inboundStream = new MediaStream();
-              // videoElem.srcObject = inboundStream;
-              //     }
-              // inboundStream.addTrack(stuff.track);
-              //   }
-              // }
-              
-              // for (const track of evt.data.getTracks()) {
-              //   pc.addTrack(track);
-              //   console.log(track);
-              // }
-              // inboundStream.addTrack(stuff.track);
-            }
+               if(isSharing) {
+                 local.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+               }
             
             // Options for getDisplayMedia()
             var displayMediaOptions = {
@@ -123,7 +112,6 @@
                 var trackList = [];
                 isSharing = true;
                 try {
-                  local = new RTCPeerConnection();
                   stuff = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
                   for (const track of stuff.getVideoTracks()) {
                     trackList.push(track);
@@ -134,6 +122,11 @@
                     return local.setLocalDescription(offer);
                   })
                   .then(function() {
+                    //socket.send({
+                    //  name: "local",
+                    //  type: "video-offer",
+                    //  sdp: local.localDescription
+                    //});
                     socket.send(JSON.stringify({
                       name: "local",
                       type: "video-offer",
@@ -184,6 +177,7 @@
                 console.info(JSON.stringify(videoTrack.getConstraints(), null, 2));
             }
           }
+       
 
 
         </script>

@@ -141,7 +141,7 @@ async def goodbye(websocket, path):
             #await notify_clients(message)
             #async for conn in websocket:
                 #message = greeting
-            await asyncio.wait([client.send(json.dumps(signal)) for client in CLIENTS])
+            await asyncio.wait([client.send((signal)) for client in CLIENTS])
                 #print("IT IS WORKING ASYNC!!!")
         # await websocket.send(state_event())
     finally:
