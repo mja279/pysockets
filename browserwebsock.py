@@ -128,7 +128,7 @@ async def goodbye(websocket, path):
             #print(f"< {name}")
             #greeting = f"Hello {name}!"
             ## async for message in websocket:
-            screen = await websocket.recv()
+            signal = await websocket.recv()
             #img = numpy.array(screen)
             ## await websocket.send(greeting)
             # greeting = f"{name}"
@@ -136,12 +136,12 @@ async def goodbye(websocket, path):
             # message = greeting
             # print(f"{name[0]}")
             # print(name[0])
-            print(json.dumps(name))
+            print(signal)
             print("HOW MANY TIMES???")
             #await notify_clients(message)
             #async for conn in websocket:
                 #message = greeting
-            await asyncio.wait([client.send(json.dumps(name)) for client in CLIENTS])
+            await asyncio.wait([client.send(json.dumps(signal)) for client in CLIENTS])
                 #print("IT IS WORKING ASYNC!!!")
         # await websocket.send(state_event())
     finally:

@@ -27,9 +27,16 @@
             socket.onmessage = function (evt) {
               console.log(isSharing);
               if(!isSharing) {
+                remote = new RTCPeerConnection();
                 stuff = evt.data;
+                customJSON = JSON.parse(stuff)
+                layerTwoJSON = JSON.parse(customJSON);
+                console.log(customJSON);
+                console.log(layerTwoJSON.sdp.sdp);
+                layerThreeJSON = layerTwoJSON.sdp.sdp += "\n";
+                remote.setRemoteDescription(String(layerThreeJSON));
                 console.log("STUFF BELOW!!!");
-                console.log(stuff);
+                //console.log(stuff);
                 // console.log(stuff.length);
                 let inboundStream = new MediaStream();
                 console.log("AM I AT LEAST GETTING HERE?");
@@ -116,7 +123,27 @@
                 var trackList = [];
                 isSharing = true;
                 try {
+                  local = new RTCPeerConnection();
                   stuff = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                  for (const track of stuff.getVideoTracks()) {
+                    trackList.push(track);
+                    local.addTrack(track);
+                  }
+                  console.log("LOCAL SET!!!");
+                  local.createOffer().then(function(offer) {
+                    return local.setLocalDescription(offer);
+                  })
+                  .then(function() {
+                    socket.send(JSON.stringify({
+                      name: "local",
+                      type: "video-offer",
+                      sdp: local.localDescription
+                    }));
+                  })
+                  .catch(function(reason) {
+                    // An error occurred, so handle the failure to connect
+                  });
+                  console.log("FINISHED LOCAL SET!!!");
                   // socket.onopen = function(event) {
                   console.log(stuff);
                   // while (stuff.active) {
@@ -127,7 +154,7 @@
                     // }
                     // console.log(stuff.id);
                     console.log(stuff.getTracks());
-                    socket.send(stuff.getTracks());
+                    //socket.send(stuff.getTracks());
                     // socket.send(stuff);
                     //   console.log("HERE");
                     //   console.log(socket);
