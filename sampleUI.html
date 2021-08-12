@@ -6,7 +6,7 @@
     <body>
         <p>This example shows you the contents of the selected part of your display.
         Click the Start Capture button to begin.</p>
-        <p><button id="start">Start Capture</button>&nbsp;<button id="stop">Stop Capture</button></p>
+        <p><button id="start">Start Capture</button>&nbsp;<button id="stop">Stop Capture</button></p><p><button id="accept">Accept Stream</button>
         <!-- <video id="video" autoplay></video>
         <br>
         <video id="remote" autoplay></video> -->
@@ -31,10 +31,11 @@
           const remoteElem = document.getElementById("remote");
           const logElem = document.getElementById("log");
           const startElem = document.getElementById("start");
+          const acceptElem = document.getElementById("accept");
           const stopElem = document.getElementById("stop");
           
           //var socket = new WebSocket('ws://127.0.0.1:5678/');
-          var trackList = [];
+          //var trackList = [];
           var isSharing = false;
           var systemicRacism = 0;
           
@@ -42,7 +43,7 @@
           var remoteStream = new MediaStream();
           
           const pc = new RTCPeerConnection();
-          const pc2 = new RTCPeerConnection();
+          //const pc = new RTCPeerConnection();
 
           var boolSet = false;
 
@@ -61,8 +62,8 @@
              
               systemicRacism = 0; 
               logElem.innerHTML = "";
-              console.log("HERE-0");
-              var trackList = [];
+              //console.log("HERE-0");
+              //var trackList = [];
               isSharing = true;
               if(boolSet == false) {
                 try {
@@ -117,6 +118,32 @@
               console.log(isSharing);
 
               if(!isSharing && !boolSet) {
+                localStream = acceptStream();
+                console.log(localStream);
+                //localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                // Now make both MediaStreams availible on the peer connection.
+                // Local stream is already running in the browser, so we can get each track and push them to the peer connection.
+                localStream.getTracks().forEach((track) => {
+                  pc.addTrack(track, localStream);
+                });
+
+                pc.ontrack = ev => {
+                  if (ev.streams && ev.streams[0]) {
+                    videoElem.srcObject = ev.streams[0];
+                  } else {
+                    let inboundStream = new MediaStream(ev.track);
+                    videoElem.srcObject = inboundStream;
+                  }
+                }
+
+                //pc.ontrack = event => {
+                //  console.log("in on track handler")
+                //  event.streams[0].getTracks().forEach(track => {
+                //    track.enabled = true;
+                //    remoteStream.addTrack(track);
+                //  });
+                //};
+
                 stuff = evt.data;
 
                 console.log("stuff: " + stuff);
@@ -124,18 +151,18 @@
 
                 console.log(customJSON);
 
-                pc2.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+                pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
                 console.log("here we are");
                 boolSet = true;
 
-                pc2.createAnswer().then(function(answer) {
-                  return pc2.setLocalDescription(answer);
+                pc.createAnswer().then(function(answer) {
+                  return pc.setLocalDescription(answer);
                 })
                 .then(function() {
                   socket.send(JSON.stringify({
                     name: "remote",
                     type: "video-answer",
-                    sdp: pc2.localDescription
+                    sdp: pc.localDescription
                   }));
                 })
                 .catch(function(reason) {
@@ -154,7 +181,12 @@
 
             }
 
-            
+            async function acceptStream() {
+                
+                localStream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                return localStream;
+            } 
+
             // Options for getDisplayMedia()
             var displayMediaOptions = {
               video: {
@@ -170,6 +202,10 @@
             
             stopElem.addEventListener("click", function(evt) {
               stopCapture();
+            }, false);
+
+            acceptElem.addEventListener("click", function(evt) {
+              acceptStream();
             }, false);
   
             console.log = msg => logElem.innerHTML += `${msg}<br>`;
