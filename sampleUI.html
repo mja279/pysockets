@@ -6,15 +6,11 @@
     <body>
         <p>This example shows you the contents of the selected part of your display.
         Click the Start Capture button to begin.</p>
-        
         <p><button id="start">Start Capture</button>&nbsp;<button id="stop">Stop Capture</button></p>
-        
         <!-- <video id="video" autoplay></video>
         <br>
         <video id="remote" autoplay></video> -->
-        
         <div class="videos">
-
           <span>
             <h3>Local</h3>
             <video id="video" autoplay playsisline></video>
@@ -24,10 +20,7 @@
             <h3>Remote</h3>
             <video id="remote" autoplay playsisline></video>
           </span>
-
         </div>
-        
-
         <strong>Log:</strong>
         <br>
         <pre id="log"></pre>
@@ -43,6 +36,7 @@
           //var socket = new WebSocket('ws://127.0.0.1:5678/');
           var trackList = [];
           var isSharing = false;
+          var systemicRacism = 0;
           
           // Establish an Empty remote stream MediaStream Object. 
           var remoteStream = new MediaStream();
@@ -56,79 +50,68 @@
 
           window.onload = function() {
             var socket = new WebSocket("ws://127.0.0.1:5678/");
-
-
-            
-            
             // Remote stream is empty, and will be updated by the peer connnection itself.
             // Listen to the ontrack event and pull tracks form incoming stream, then add stream to remoteStream Object.
-            pc.ontrack = event => {
-              console.log("in on track handler")
-              event.streams[0].getTracks().forEach(track => {
-                track.enabled = true;
-                remoteStream.addTrack(track);
-              });
-            };
 
             // Last, apply both stream Objects to their respective video elements in the DOM. 
             // remoteElem.srcObject = remoteStream;
             
             //START CAPTURE HERE
             async function startCapture() {
-              
+             
+              systemicRacism = 0; 
               logElem.innerHTML = "";
               console.log("HERE-0");
               var trackList = [];
               isSharing = true;
-              try {
-                localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
-                
-                // Now make both MediaStreams availible on the peer connection.
-                // Local stream is already running in the browser, so we can get each track and push them to the peer connection.
-                localStream.getTracks().forEach((track) => {
-                  pc.addTrack(track, localStream);
-                });
+              if(boolSet == false) {
+                try {
+                  localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                  
+                  // Now make both MediaStreams availible on the peer connection.
+                  // Local stream is already running in the browser, so we can get each track and push them to the peer connection.
+                  localStream.getTracks().forEach((track) => {
+                    pc.addTrack(track, localStream);
+                  });
 
-                // // Remote stream is empty, and will be updated by the peer connnection itself.
-                // // Listen to the ontrack event and pull tracks form incoming stream, then add stream to remoteStream Object.
-                // pc.ontrack = event => {
-                //   event.streams[0].getTracks().forEach(track => {
-                //     remoteStream.addTrack(track);
-                //   });
-                // };
+                  pc.ontrack = event => {
+                    console.log("in on track handler")
+                    event.streams[0].getTracks().forEach(track => {
+                      track.enabled = true;
+                      remoteStream.addTrack(track);
+                    });
+                  };
 
-                // // Last, apply both stream Objects to their respective video elements in the DOM. 
-                // // videoElem.srcObject = localStream;
-                // remoteElem.srcObject = remoteStream;
+                  console.log("LOCAL SET!!!");
 
-                console.log("LOCAL SET!!!");
+                  pc.createOffer().then(function(offer) {
+                    return pc.setLocalDescription(offer);
+                  })
+                  .then(function() {
+                    socket.send(JSON.stringify({
+                      name: "local",
+                      type: "video-offer",
+                      sdp: pc.localDescription
+                    }));
+                  })
+                  .catch(function(reason) {
+                    // An error occurred, so handle the failure to connect
+                  });
 
-                pc.createOffer().then(function(offer) {
-                  return pc.setLocalDescription(offer);
-                })
-                .then(function() {
-                  socket.send(JSON.stringify({
-                    name: "local",
-                    type: "video-offer",
-                    sdp: pc.localDescription
-                  }));
-                })
-                .catch(function(reason) {
-                  // An error occurred, so handle the failure to connect
-                });
+                  console.log("FINISHED LOCAL SET!!!");
+                  console.log(localStream);
+                  console.log(localStream.getTracks());
+                  dumpOptionsInfo();
 
-                console.log("FINISHED LOCAL SET!!!");
-                console.log(localStream);
-                console.log(localStream.getTracks());
-                dumpOptionsInfo();
-
-              } catch(err) {
-                console.error("Error: " + err);
+                } catch(err) {
+                  console.error("Error: " + err);
+                }
               }
             }
 
+            // THIS IS WHERE THE ONMESSAGE HAPPENS!!!!
             socket.onmessage = function (evt) {
-
+              systemicRacism += 1;
               // var stuff;
 
               console.log(isSharing);
@@ -161,7 +144,8 @@
                 remoteElem.srcObject = remoteStream;
               }
 
-              if(isSharing) {
+              if(isSharing && (systemicRacism > 1)) {
+                //boolSet = true;
                 stuff = evt.data;
                 console.log("in isSharing Block")
                 console.log("stuff: " + stuff);
