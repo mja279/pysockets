@@ -49,8 +49,18 @@
 
           var stuff;
 
+
           window.onload = function() {
             var socket = new WebSocket("ws://127.0.0.1:5678/");
+
+            pc.ontrack = event => {
+              console.log("in on track handler")
+              event.streams[0].getTracks().forEach(track => {
+                //track.enabled = true;
+                remoteStream.addTrack(track);
+              });
+            };
+
             // Remote stream is empty, and will be updated by the peer connnection itself.
             // Listen to the ontrack event and pull tracks form incoming stream, then add stream to remoteStream Object.
 
@@ -72,16 +82,11 @@
                   // Now make both MediaStreams availible on the peer connection.
                   // Local stream is already running in the browser, so we can get each track and push them to the peer connection.
                   localStream.getTracks().forEach((track) => {
+                    console.log("AM I AT LEAST OVER HERE THOUGH????");
                     pc.addTrack(track, localStream);
                   });
 
-                  pc.ontrack = event => {
-                    console.log("in on track handler")
-                    event.streams[0].getTracks().forEach(track => {
-                      track.enabled = true;
-                      remoteStream.addTrack(track);
-                    });
-                  };
+
 
                   console.log("LOCAL SET!!!");
 
@@ -99,6 +104,8 @@
                     // An error occurred, so handle the failure to connect
                   });
 
+                  remoteElem.srcObject = remoteStream;
+
                   console.log("FINISHED LOCAL SET!!!");
                   console.log(localStream);
                   console.log(localStream.getTracks());
@@ -115,26 +122,29 @@
               systemicRacism += 1;
               // var stuff;
 
+
               console.log(isSharing);
 
               if(!isSharing && !boolSet) {
-                localStream = acceptStream();
-                console.log(localStream);
+                //localStream = acceptStream();
+                //console.log(localStream);
+
                 //localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
                 // Now make both MediaStreams availible on the peer connection.
                 // Local stream is already running in the browser, so we can get each track and push them to the peer connection.
-                localStream.getTracks().forEach((track) => {
-                  pc.addTrack(track, localStream);
-                });
 
-                pc.ontrack = ev => {
-                  if (ev.streams && ev.streams[0]) {
-                    videoElem.srcObject = ev.streams[0];
-                  } else {
-                    let inboundStream = new MediaStream(ev.track);
-                    videoElem.srcObject = inboundStream;
-                  }
-                }
+                //localStream.getTracks().forEach((track) => {
+                //  pc.addTrack(track, localStream);
+                //});
+
+                //pc.ontrack = ev => {
+                //  if (ev.streams && ev.streams[0]) {
+                //    videoElem.srcObject = ev.streams[0];
+                //  } else {
+                //    let inboundStream = new MediaStream(ev.track);
+                //    videoElem.srcObject = inboundStream;
+                //  }
+                //}
 
                 //pc.ontrack = event => {
                 //  console.log("in on track handler")
