@@ -69,7 +69,7 @@
 
 
           window.onload = function() {
-            var socket = new WebSocket("ws://127.0.0.1:5678/");
+            var socket = new WebSocket("ws://ec2-52-0-207-17.compute-1.amazonaws.com:5678/");
 
             pc.ontrack = event => {
               console.log("in on track handler")
