@@ -46,6 +46,7 @@
           //var socket = new WebSocket('ws://127.0.0.1:5678/');
           //var trackList = [];
           var isSharing = false;
+          var seshDescSet = false;
           var systemicRacism = 0;
           var institutionalBias = 0; 
           var offerICE;
@@ -114,6 +115,7 @@
                             type: "video-offer",
                             sdp: pc.localDescription
                        }));
+                  //pc.restartIce();
                   pc.createOffer().then(o => pc.setLocalDescription(o)).then(a => console.log("set succesfully"));
                   //pc.createOffer().then(function(offer) {
                   //  return pc.setLocalDescription(offer);
@@ -188,7 +190,7 @@
                 }));
 
                 pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
-
+                pc.restartIce();
                 pc.createAnswer().then(a => pc.setLocalDescription(a)).then(a => console.log("answer created"));
 
                 //pc.addIceCandidate(JSON.parse(stuff).offerICE);
@@ -213,7 +215,7 @@
                 //}
               }
 
-              if(systemicRacism == 5 || systemicRacism == 4) {
+              if(systemicRacism == 4) {
                 boolSet = true;
               }
               if(isSharing && boolSet) {
@@ -222,11 +224,14 @@
                 //}
                 //boolSet = true;
                 //else {
+                //if(!seshDescSet) {
                 stuff = evt.data;
                 console.log("in isSharing Block")
                 console.log("stuff: " + stuff);
                 //pc.onicecandidate = e => pc.addIceCandidate();
                 pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+                seshDescSet = true;
+                //}
                 //pc.addIceCandidate(JSON.parse(stuff).answerICECandidate);
                 //}
               }

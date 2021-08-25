@@ -1,0 +1,308 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+
+    <body>
+        <p>This example shows you the contents of the selected part of your display.
+        Click the Start Capture button to begin.</p>
+        <p><button id="start">Start Capture</button>&nbsp;<button id="stop">Stop Capture</button></p><p><button id="accept">Accept Stream</button>
+        <!-- <video id="video" autoplay></video>
+        <br>
+        <video id="remote" autoplay></video> -->
+        <div class="videos">
+          <span>
+            <h3>Local</h3>
+            <video id="video" controls autoplay playsisline></video>
+          </span>
+
+          <span>
+            <h3>Remote</h3>
+            <video id="remote" controls autoplay playsisline></video>
+          </span>
+          <!--<span>
+            <h3>Local</h3>
+            <video id="video" autoplay playsisline></video>
+          </span>
+
+          <span>
+            <h3>Remote</h3>
+            <video id="remote" autoplay playsisline></video>
+          </span>-->
+        </div>
+        <strong>Log:</strong>
+        <br>
+        <pre id="log"></pre>
+        
+        <script>
+          
+          const videoElem = document.getElementById("video");
+          const remoteElem = document.getElementById("remote");
+          const logElem = document.getElementById("log");
+          const startElem = document.getElementById("start");
+          const acceptElem = document.getElementById("accept");
+          const stopElem = document.getElementById("stop");
+          
+          //var socket = new WebSocket('ws://127.0.0.1:5678/');
+          //var trackList = [];
+          var isSharing = false;
+          var seshDescSet = false;
+          var systemicRacism = 0;
+          var institutionalBias = 0; 
+          var offerICE;
+          // Establish an Empty remote stream MediaStream Object. 
+          var remoteStream = new MediaStream();
+          
+          const servers = {
+              iceServers: [
+                {
+                  urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
+                },
+              ],
+              iceCandidatePoolSize: 10,
+          };
+          const pc = new RTCPeerConnection(servers);
+          //const pc = new RTCPeerConnection();
+
+          var boolSet = false;
+
+          var stuff;
+
+
+          window.onload = function() {
+            var socket = new WebSocket("ws://ec2-52-0-207-17.compute-1.amazonaws.com:5678/");
+
+            pc.ontrack = event => {
+              console.log("in on track handler")
+              event.streams[0].getTracks().forEach(track => {
+                //track.enabled = true;
+                remoteStream.addTrack(track);
+              });
+            };
+
+            // Remote stream is empty, and will be updated by the peer connnection itself.
+            // Listen to the ontrack event and pull tracks form incoming stream, then add stream to remoteStream Object.
+
+            // Last, apply both stream Objects to their respective video elements in the DOM. 
+            // remoteElem.srcObject = remoteStream;
+            
+            //START CAPTURE HERE
+            async function startCapture() {
+             
+              systemicRacism = 0; 
+              logElem.innerHTML = "";
+              //console.log("HERE-0");
+              //var trackList = [];
+              isSharing = true;
+              boolSet = false;
+              if(boolSet == false) {
+                try {
+                  localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                  
+                  // Now make both MediaStreams availible on the peer connection.
+                  // Local stream is already running in the browser, so we can get each track and push them to the peer connection.
+                  localStream.getTracks().forEach((track) => {
+                    console.log("AM I AT LEAST OVER HERE THOUGH????");
+                    pc.addTrack(track, localStream);
+                  });
+
+
+
+                  console.log("LOCAL SET!!!");
+
+                  pc.onicecandidate = e => socket.send(JSON.stringify({
+                            name: "local",
+                            type: "video-offer",
+                            sdp: pc.localDescription
+                       }));
+                  //pc.restartIce();
+                  pc.createOffer().then(o => pc.setLocalDescription(o)).then(a => console.log("set succesfully"));
+                  //pc.createOffer().then(function(offer) {
+                  //  return pc.setLocalDescription(offer);
+                  //})
+                  //.then(function() {
+                  //  socket.send(JSON.stringify({
+                  //    name: "local",
+                  //    type: "video-offer",
+                  //    sdp: pc.localDescription
+                  //    //offerICECandidate: offerICE
+                  //  }));
+                  //})
+                  //.catch(function(reason) {
+                  //  // An error occurred, so handle the failure to connect
+                  //});
+
+                  remoteElem.srcObject = remoteStream;
+
+                  console.log("FINISHED LOCAL SET!!!");
+                  console.log(localStream);
+                  console.log(localStream.getTracks());
+                  dumpOptionsInfo();
+
+                } catch(err) {
+                  console.error("Error: " + err);
+                }
+              }
+            }
+
+            // THIS IS WHERE THE ONMESSAGE HAPPENS!!!!
+            socket.onmessage = function (evt) {
+              systemicRacism += 1;
+              institutionalBias += 1;
+
+              // var stuff;
+
+
+              console.log(isSharing);
+
+              if(evt.data == "STOPPED") {
+                stopRemoteCapture();
+              }
+              if(!isSharing && !boolSet && (institutionalBias > 0)) {
+                stuff = evt.data;
+                var answerICE;
+
+                console.log("stuff: " + stuff);
+                customJSON = JSON.parse(stuff);
+
+                console.log(customJSON);
+                //pc.onicecandidate = e => pc.addIceCandidate();
+
+                //pc.onicecandidate = e => {
+                //  if(e.candidate){
+                //    answerICE = e.candidate;
+                //    socket.send(JSON.stringify({
+                //      //name: "remote",
+                //      //type: "video-answer",
+                //      //sdp: pc.localDescription,
+                //      answerICECandidate: answerICE
+                //    }));
+                //      //socket.send(JSON.stringify({
+                //      //    name: "iceCandidate",
+                //      //    type: "answerCandidate"
+                //      //}));
+                //  }
+                //};
+                pc.onicecandidate = e => socket.send(JSON.stringify({
+                    name: "remote",
+                    type: "video-answer",
+                    sdp: pc.localDescription
+                }));
+
+                pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+                pc.restartIce();
+                pc.createAnswer().then(a => pc.setLocalDescription(a)).then(a => console.log("answer created"));
+
+                //pc.addIceCandidate(JSON.parse(stuff).offerICE);
+                console.log("here we are");
+                boolSet = true;
+
+                //pc.createAnswer().then(function(answer) {
+                //  return pc.setLocalDescription(answer);
+                //})
+                //.then(function() {
+                //  socket.send(JSON.stringify({
+                //    name: "remote",
+                //    type: "video-answer",
+                //    sdp: pc.localDescription,
+                //    //answerICECandidate: answerICE
+                //  }));
+                //})
+                //.catch(function(reason) {
+                //  // An error occurred, so handle the failure to connect
+                //});    
+                remoteElem.srcObject = remoteStream;
+                //}
+              }
+
+              if(systemicRacism == 4) {
+                boolSet = true;
+              }
+              if(isSharing && boolSet) {
+                //if(institutionalBias > 3) {
+                //    pc.addIceCandidate(JSON.parse(stuff).answerICECandidate);
+                //}
+                //boolSet = true;
+                //else {
+                //if(!seshDescSet) {
+                stuff = evt.data;
+                console.log("in isSharing Block")
+                console.log("stuff: " + stuff);
+                //pc.onicecandidate = e => pc.addIceCandidate();
+                pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+                seshDescSet = true;
+                //}
+                //pc.addIceCandidate(JSON.parse(stuff).answerICECandidate);
+                //}
+              }
+
+            }
+
+            async function acceptStream() {
+                
+                localStream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                return localStream;
+            } 
+
+            // Options for getDisplayMedia()
+            var displayMediaOptions = {
+              video: {
+                cursor: "always"
+              },
+              audio: true
+            };
+            
+            // Set event listeners for the start and stop buttons
+            startElem.addEventListener("click", function(evt) {
+              startCapture();
+            }, false);
+            
+            stopElem.addEventListener("click", function(evt) {
+              stopCapture();
+            }, false);
+
+            acceptElem.addEventListener("click", function(evt) {
+              acceptStream();
+            }, false);
+  
+            console.log = msg => logElem.innerHTML += `${msg}<br>`;
+            console.error = msg => logElem.innerHTML += `<span class="error">${msg}</span><br>`;
+            console.warn = msg => logElem.innerHTML += `<span class="warn">${msg}<span><br>`;
+            console.info = msg => logElem.innerHTML += `<span class="info">${msg}</span><br>`;
+  
+            function stopCapture(evt) {
+                let tracks = videoElem.srcObject.getTracks();
+                
+                tracks.forEach(track => track.stop());
+                videoElem.srcObject = null;
+                boolSet = false;
+                socket.send("STOPPED");
+            }
+
+            //Needs work to properly renegotiate ICE candidates
+            function stopRemoteCapture(evt) {
+                let tracks = remoteElem.srcObject.getTracks();
+                
+                tracks.forEach(track => {
+                    track.stop()
+                    remoteStream.removeTrack(track);
+                });
+                remoteElem.srcObject = null;
+                systemicRacism = 0;
+                boolSet = false;
+                institutionalBias = 0;
+            }
+  
+            function dumpOptionsInfo() {
+                const videoTrack = videoElem.srcObject.getVideoTracks()[0];
+                
+                console.info("Track settings:");
+                console.info(JSON.stringify(videoTrack.getSettings(), null, 2));
+                console.info("Track constraints:");
+                console.info(JSON.stringify(videoTrack.getConstraints(), null, 2));
+            }
+          }
+
+        </script>
+    </body>
+</html>
