@@ -1,0 +1,375 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+
+    <body>
+        <p>This example shows you the contents of the selected part of your display.
+        Click the Start Capture button to begin.</p>
+        
+        <p><button id="start">Start Capture</button>&nbsp;<button id="stop">Stop Capture</button></p>
+        
+        <!-- <video id="video" autoplay></video>
+        <br>
+        <video id="remote" autoplay></video> -->
+        
+        <div class="videos">
+
+          <span>
+            <h3>Local</h3>
+            <video id="video" controls autoplay playsisline></video>
+          </span>
+
+          <span>
+            <h3>Remote</h3>
+            <video id="remote" controls autoplay playsisline></video>
+          </span>
+
+        </div>
+
+        <button class="open-button" onclick="openForm()">Chat</button>
+
+        <div class="chat-popup" id="myForm">
+          <form action="/action_page.php" class="form-container">
+            <h1>Chat</h1>
+        
+            <label for="msg"><b>Message</b></label>
+            <textarea placeholder="Type message.." name="msg" required></textarea>
+        
+            <button type="submit" class="btn">Send</button>
+            <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+          </form>
+        </div>
+
+        <strong>Log:</strong>
+        <br>
+        <pre id="log"></pre>
+        
+        <script>
+
+          const videoElem = document.getElementById("video");
+          const remoteElem = document.getElementById("remote");
+          const logElem = document.getElementById("log");
+          const startElem = document.getElementById("start");
+          const stopElem = document.getElementById("stop");
+          
+          //var socket = new WebSocket('ws://127.0.0.1:5678/');
+          var trackList = [];
+          var isSharing = false;
+          
+          // Establish an Empty remote stream MediaStream Object. 
+          var remoteStream = new MediaStream();
+          
+          var ans = null;
+          var off = null;
+          var request = false;
+          var pcid = null;
+          var origin = false;
+          // var dc = null;
+          // var sendChannel = null;
+          
+          // const pc = new RTCPeerConnection();
+          // //   const pc2 = new RTCPeerConnection();
+
+          // pc.onicecandidate = e =>  {
+          //   console.log("NEW ice candidnat!! on localconnection reprinting SDP");
+          //   console.log(JSON.stringify(pc.localDescription));
+          //   // socket.send(JSON.stringify(pc.localDescription));
+          // }
+
+          // var boolSet = false;
+          
+          // var stuff;
+          
+          function openForm() {
+            document.getElementById("myForm").style.display = "block";
+            connectDataChannel();
+          }
+
+          function closeForm() {
+            document.getElementById("myForm").style.display = "none";
+          }
+
+          function uuidv4() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+              var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+            });
+          }
+
+          // async function connectDataChannel() {
+          //   await checkForChat().then( a => {
+          //     if(a === "party availible"){
+          //       pc.ondatachannel= e => {
+          //         const receiveChannel = e.channel;
+          //         receiveChannel.onmessage =e =>  console.log("messsage received!!!"  + e.data )
+          //         receiveChannel.onopen = e => console.log("open!!!!");
+          //         receiveChannel.onclose =e => console.log("closed!!!!!!");
+          //         pc.channel = receiveChannel;
+          //       };
+          //     }else{
+          //       const sendChannel = pc.createDataChannel("sendChannel");
+          //       sendChannel.onmessage =e =>  console.log("messsage received!!!"  + e.data )
+          //       sendChannel.onclose =e => console.log("closed!!!!!!");
+          //     }
+  
+          //   });
+          // };
+
+          // async function checkForChat() {
+          //   socket.send("is chat open");
+          //   await 
+          // };
+
+          // window.onload = function() {
+          //   var socket = new WebSocket("ws://127.0.0.1:5678/");
+
+          //   socket.onopen = function(event) {
+          //     // pc.createOffer().then(offer => pc.setLocalDescription(offer));
+          //     pcid = uuidv4();
+          //     request = true;
+          //     message = {
+          //       id: pcid,
+          //       type: "offer request",
+          //       payload:"new Peer"
+          //     };
+          //     socket.send(JSON.stringify(message));
+          //   };
+
+          //   // pc.onicecandidate = e =>  {
+          //   //   console.log("NEW ice candidnat!! on localconnection reprinting SDP");
+          //   //   console.log(JSON.stringify(pc.localDescription));
+          //   //   // socket.send(JSON.stringify(pc.localDescription));
+          //   // }
+            
+          //   // Remote stream is empty, and will be updated by the peer connnection itself.
+          //   // Listen to the ontrack event and pull tracks form incoming stream, then add stream to remoteStream Object.
+          //   pc.ontrack = event => {
+          //     console.log("in on track handler")
+          //     event.streams[0].getTracks().forEach(track => {
+          //       // track.enabled = true;
+          //       remoteStream.addTrack(track);
+          //     });
+          //   };
+
+          //   // Last, apply both stream Objects to their respective video elements in the DOM. 
+          //   // remoteElem.srcObject = remoteStream;
+            
+          //   //START CAPTURE HERE
+          //   async function startCapture() {
+              
+          //     logElem.innerHTML = "";
+          //     console.log("HERE-0");
+          //     var trackList = [];
+          //     isSharing = true;
+          //     try {
+          //       localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                
+          //       // Now make both MediaStreams availible on the peer connection.
+          //       // Local stream is already running in the browser, so we can get each track and push them to the peer connection.
+          //       localStream.getTracks().forEach((track) => {
+          //         pc.addTrack(track, localStream);
+          //       });
+
+          //       // // Remote stream is empty, and will be updated by the peer connnection itself.
+          //       // // Listen to the ontrack event and pull tracks form incoming stream, then add stream to remoteStream Object.
+          //       // pc.ontrack = event => {
+          //       //   event.streams[0].getTracks().forEach(track => {
+          //       //     remoteStream.addTrack(track);
+          //       //   });
+          //       // };
+
+          //       // // Last, apply both stream Objects to their respective video elements in the DOM. 
+          //       // // videoElem.srcObject = localStream;
+          //       // remoteElem.srcObject = remoteStream;
+
+          //       console.log("LOCAL SET!!!");
+                
+          //       pc.createOffer().then(offer => pc.setLocalDescription(offer));
+
+          //       // pc.createOffer().then(function(offer) {
+          //       //   off = offer;
+          //       //   return pc.setLocalDescription(offer);
+          //       // })
+          //       // .then(function() {
+          //       //   socket.send(JSON.stringify({
+          //       //     sdp: off.sdp,
+          //       //     type: off.type,
+          //       //   }));
+          //       // })
+          //       // .catch(function(reason) {
+          //       //   // An error occurred, so handle the failure to connect
+          //       // });
+
+          //       console.log("FINISHED LOCAL SET!!!");
+          //       console.log(localStream);
+          //       console.log(localStream.getTracks());
+          //       dumpOptionsInfo();
+
+          //     } catch(err) {
+          //       console.error("Error: " + err);
+          //     }
+          //   }
+
+          //   socket.onmessage = function (evt) {
+          //     // console.log("in on message")
+          //     // console.log(evt.data)
+          //     const data = JSON.parse(evt.data);
+
+          //     if(data == "first" && request && !origin) {
+          //       origin = true;
+          //       console.log("in on message")
+          //       console.log(data)
+          //       pc.createOffer().then(offer => pc.setLocalDescription(offer));
+          //       dc = pc.createDataChannel("channel");
+          //       dc.onmessage = e => console.log("messsage received:" + e.data );
+          //       dc.onopen = e => console.log("closed!!!!!!")
+          //       dc.onclose = e => console.log("closed!!!!!!");
+          //     };
+
+          //     // var stuff;
+          //     if(data.id !== pcid) {
+
+          //       if(data.type === "offer request" && !request) {
+          //         console.log("in on message")
+          //         console.log("recieved offer request, sending offer...")
+          //         console.log(JSON.stringify(pc.localDescription))
+          //         // send offer
+          //         // pcid = uuidv4();
+          //         request = true;
+          //         message = {
+          //           id: pcid,
+          //           type: "offer",
+          //           payload: pc.localDescription
+          //         };
+          //         socket.send(JSON.stringify(message));
+          //         console.log("Offer sent to NEW Peer!");
+          //         // return
+          //       }
+  
+          //       // console.log(isSharing);
+  
+          //       // if(!isSharing && !boolSet && evt.data !== "newPeer") {
+          //       if(data.type === "offer" && !request) {
+          //         console.log("in on message")
+          //         console.log("offer recieved")
+          //         console.log(JSON.stringify(data.payload))
+          //         // stuff = evt.data;
+          //         offer = data.payload;
+  
+          //         // console.log("stuff: " + stuff);
+          //         // console.log("offer: " + evt.data.payload);
+          //         // customJSON = JSON.parse(stuff);
+  
+          //         // console.log(customJSON);
+  
+          //         // pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+          //         pc.setRemoteDescription(offer).then(a => console.log("set remote description with offer: " + JSON.stringify(data.payload)));
+  
+          //         // console.log("here we are");
+          //         // boolSet = true;
+  
+          //         pc.createAnswer()
+          //         .then(a => pc.setLocalDescription(a))
+          //         .then(a => {
+          //           // pcid = uuidv4();
+          //           message = {
+          //             id: pcid,
+          //             type: "answer",
+          //             payload: pc.localDescription
+          //           };
+          //           socket.send(JSON.stringify(message))
+          //           console.log("Local description set to offer, and answer sent to requesting Peer!")
+          //         });
+
+          //         pc.ondatachannel = e => {
+          //           pc.dc = e.channel;
+          //           pc.dc.onmessage =e =>  console.log("messsage received!!!"  + e.data )
+          //           pc.dc.onopen = e => console.log("open!!!!");
+          //           pc.dc.onclose =e => console.log("closed!!!!!!");
+          //         };
+
+
+          //         // const receiveChannel = e.channel;
+          //         // receiveChannel.onmessage =e =>  console.log("messsage received!!!"  + e.data )
+          //         // receiveChannel.onopen = e => console.log("open!!!!");
+          //         // receiveChannel.onclose =e => console.log("closed!!!!!!");
+          //         // pc.channel = receiveChannel;
+  
+          //         // pc.createAnswer().then(function(answer) {
+          //         //   ans = answer;
+          //         //   return pc.setLocalDescription(answer);
+          //         // })
+          //         // .then(function() {
+          //         //   socket.send(JSON.stringify({
+          //         //     sdp: ans.sdp,
+          //         //     type: ans.type,
+          //         //   }));
+          //         // })
+          //         // .catch(function(reason) {
+          //         //   // An error occurred, so handle the failure to connect
+          //         // });    
+          //         // remoteElem.srcObject = remoteStream;
+          //       };
+  
+          //       if(data.type === "answer" && !request) {
+          //         console.log("in on message")
+          //         console.log("Answer recieved, setting remote description to answer...")
+          //         console.log(JSON.stringify(data.payload))
+          //         // stuff = evt.data;
+          //         answer = data.payload;
+          //         // console.log("answer: " + answer);
+          //         // console.log("stuff: " + stuff);
+          //         // pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+          //         pc.setRemoteDescription(answer).then( a => "set remote description with answer: " + JSON.stringify(data.payload));
+          //       };
+
+          //     };
+
+          //     request = false;
+
+          //   }
+
+            
+          //   // Options for getDisplayMedia()
+          //   var displayMediaOptions = {
+          //     video: {
+          //       cursor: "always"
+          //     },
+          //     audio: true
+          //   };
+            
+          //   // Set event listeners for the start and stop buttons
+          //   startElem.addEventListener("click", function(evt) {
+          //     startCapture();
+          //   }, false);
+            
+          //   stopElem.addEventListener("click", function(evt) {
+          //     stopCapture();
+          //   }, false);
+  
+          //   console.log = msg => logElem.innerHTML += `${msg}<br>`;
+          //   console.error = msg => logElem.innerHTML += `<span class="error">${msg}</span><br>`;
+          //   console.warn = msg => logElem.innerHTML += `<span class="warn">${msg}<span><br>`;
+          //   console.info = msg => logElem.innerHTML += `<span class="info">${msg}</span><br>`;
+  
+          //   function stopCapture(evt) {
+          //       let tracks = videoElem.srcObject.getTracks();
+                
+          //       tracks.forEach(track => track.stop());
+          //       videoElem.srcObject = null;
+          //   }
+  
+          //   function dumpOptionsInfo() {
+          //       const videoTrack = videoElem.srcObject.getVideoTracks()[0];
+                
+          //       console.info("Track settings:");
+          //       console.info(JSON.stringify(videoTrack.getSettings(), null, 2));
+          //       console.info("Track constraints:");
+          //       console.info(JSON.stringify(videoTrack.getConstraints(), null, 2));
+          //   }
+          // }
+
+        </script>
+    </body>
+</html>

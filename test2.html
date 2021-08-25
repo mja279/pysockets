@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        window.onload = function() {
+
+
+            //set offer const offer = ...
+            const remoteConnection = new RTCPeerConnection()
+            var offer = {};
+    
+            remoteConnection.onicecandidate = e =>  {
+            console.log(" NEW ice candidnat!! on localconnection reprinting SDP " )
+            console.log(JSON.stringify(remoteConnection.localDescription) )
+            }
+    
+            
+            remoteConnection.ondatachannel= e => {
+    
+                const receiveChannel = e.channel;
+                receiveChannel.onmessage =e =>  console.log("messsage received!!!"  + e.data )
+                receiveChannel.onopen = e => console.log("open!!!!");
+                receiveChannel.onclose =e => console.log("closed!!!!!!");
+                remoteConnection.channel = receiveChannel;
+    
+            }
+    
+    
+            // remoteConnection.setRemoteDescription(offer).then(a=>console.log("done"))
+    
+            //create answer
+            // remoteConnection.createAnswer().then(a => remoteConnection.setLocalDescription(a)).then(a=>
+            // console.log(JSON.stringify(remoteConnection.localDescription)))
+            //send the anser to the client 
+
+        }
+    </script>
+</body>
+</html>

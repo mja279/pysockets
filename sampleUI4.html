@@ -1,0 +1,240 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+
+    <body>
+        <p>This example shows you the contents of the selected part of your display.
+        Click the Start Capture button to begin.</p>
+        <p><button id="start">Start Capture</button>&nbsp;<button id="stop">Stop Capture</button></p><p><button id="accept">Accept Stream</button>
+        <!-- <video id="video" autoplay></video>
+        <br>
+        <video id="remote" autoplay></video> -->
+        <div class="videos">
+          <span>
+            <h3>Local</h3>
+            <video id="video" autoplay playsisline></video>
+          </span>
+
+          <span>
+            <h3>Remote</h3>
+            <video id="remote" autoplay playsisline></video>
+          </span>
+        </div>
+        <strong>Log:</strong>
+        <br>
+        <pre id="log"></pre>
+        
+        <script>
+          
+          const videoElem = document.getElementById("video");
+          const remoteElem = document.getElementById("remote");
+          const logElem = document.getElementById("log");
+          const startElem = document.getElementById("start");
+          const acceptElem = document.getElementById("accept");
+          const stopElem = document.getElementById("stop");
+
+          const dc;
+          
+          //var socket = new WebSocket('ws://127.0.0.1:5678/');
+          //var trackList = [];
+          var isSharing = false;
+          var systemicRacism = 0;
+          
+          // Establish an Empty remote stream MediaStream Object. 
+          var remoteStream = new MediaStream();
+          
+          const pc = new RTCPeerConnection();
+          //const pc = new RTCPeerConnection();
+
+          var boolSet = false;
+
+          var stuff;
+
+
+          window.onload = function() {
+            var socket = new WebSocket("ws://127.0.0.1:5678/");
+
+            pc.ontrack = event => {
+              console.log("in on track handler")
+             
+              // event.streams[0].getTracks()[0].enabled = true;
+              event.streams[0].getVideoTracks().forEach(track => {
+                track.enabled = true;
+                remoteStream.addTrack(track);
+                videoElem.srcObject = remoteStream;
+              });
+            }
+
+            pc.onicecandidate = e => console.log("New ice candidate! reprinting sdp");
+
+
+            // Remote stream is empty, and will be updated by the peer connnection itself.
+            // Listen to the ontrack event and pull tracks form incoming stream, then add stream to remoteStream Object.
+
+            // Last, apply both stream Objects to their respective video elements in the DOM. 
+            // remoteElem.srcObject = remoteStream;
+            
+            //START CAPTURE HERE
+            async function startCapture() {
+             
+              systemicRacism = 0; 
+              logElem.innerHTML = "";
+              //console.log("HERE-0");
+              //var trackList = [];
+              isSharing = true;
+              if(boolSet == false) {
+                try {
+                  localStream = videoElem.srcObject = await navigator.mediaDevices.getUserMedia(displayMediaOptions);
+                  
+                  // Now make both MediaStreams availible on the peer connection.
+                  // Local stream is already running in the browser, so we can get each track and push them to the peer connection.
+                  localStream.getTracks().forEach((track) => {
+                    console.log("AM I AT LEAST OVER HERE THOUGH????");
+                    pc.addTrack(track, localStream);
+                  });
+
+                  dc = pc.createDataChannel("channel");
+                  dc.onmessage = e => console.log("Just got a message " + e.data);
+                  dc.onopen = e => console.log("connection open");
+                  // lc.onicecandidate = e => console.log("New ice candidate! reprinting sdp" + JSON.stringify(lc.localDescription));
+                  // lc.createOffer().then( o => lc.setLocalDescription(o)).then(a => console.log("set succesfully"));
+
+                  console.log("LOCAL SET!!!");
+
+                  
+
+                  pc.createOffer().then(function(offer) {
+                    return pc.setLocalDescription(offer);
+                  })
+                  .then(function() {
+                    socket.send(JSON.stringify({
+                      name: "local",
+                      type: "video-offer",
+                      sdp: pc.localDescription
+                    }));
+                  })
+                  .catch(function(reason) {
+                    // An error occurred, so handle the failure to connect
+                  });
+
+                  // remoteElem.srcObject = remoteStream;
+
+                  console.log("FINISHED LOCAL SET!!!");
+                  console.log(localStream);
+                  console.log(localStream.getTracks());
+                  dumpOptionsInfo();
+
+                } catch(err) {
+                  console.error("Error: " + err);
+                }
+              }
+            }
+
+            // THIS IS WHERE THE ONMESSAGE HAPPENS!!!!
+            socket.onmessage = function (evt) {
+              systemicRacism += 1;
+              // var stuff;
+
+              
+              console.log(isSharing);
+              
+              if(!isSharing && !boolSet) {
+                stuff = evt.data;
+                
+                console.log("stuff: " + stuff);
+                customJSON = JSON.parse(stuff);
+                
+                console.log(customJSON);
+
+                // rc.onicecandidate = e => console.log("New ice candidate! reprinting sdp" + JSON.stringify(rc.localDescription));
+                pc.ondatachannel = e => {
+                    pc.dc = e.channel;
+                    pc.dc.onmessage = e => console.log("new message: " + e.data);
+                    pc.dc.onopen = e => console.log("connected");
+                };
+                // pc.setRemoteDescription(offer).then(a => console.log("offer set"));
+                // pc.createAnswer().then(a => rc.setLocalDescription(a)).then(a => console.log("answer created"));
+
+                pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+                console.log("here we are");
+                boolSet = true;
+
+                pc.createAnswer().then(function(answer) {
+                  return pc.setLocalDescription(answer);
+                })
+                .then(function() {
+                  socket.send(JSON.stringify({
+                    name: "remote",
+                    type: "video-answer",
+                    sdp: pc.localDescription
+                  }));
+                })
+                .catch(function(reason) {
+                  // An error occurred, so handle the failure to connect
+                });    
+                remoteElem.srcObject = remoteStream;
+              }
+
+              if(isSharing && (systemicRacism > 1)) {
+                //boolSet = true;
+                stuff = evt.data;
+                console.log("in isSharing Block")
+                console.log("stuff: " + stuff);
+                pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+              }
+
+            }
+
+            async function acceptStream() {
+                
+              localStream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+              return localStream;
+            } 
+
+            // Options for getDisplayMedia()
+            var displayMediaOptions = {
+              video: {
+                cursor: "always"
+              },
+              audio: true
+            };
+            
+            // Set event listeners for the start and stop buttons
+            startElem.addEventListener("click", function(evt) {
+              startCapture();
+            }, false);
+            
+            stopElem.addEventListener("click", function(evt) {
+              stopCapture();
+            }, false);
+
+            acceptElem.addEventListener("click", function(evt) {
+              acceptStream();
+            }, false);
+  
+            console.log = msg => logElem.innerHTML += `${msg}<br>`;
+            console.error = msg => logElem.innerHTML += `<span class="error">${msg}</span><br>`;
+            console.warn = msg => logElem.innerHTML += `<span class="warn">${msg}<span><br>`;
+            console.info = msg => logElem.innerHTML += `<span class="info">${msg}</span><br>`;
+  
+            function stopCapture(evt) {
+                let tracks = videoElem.srcObject.getTracks();
+                
+                tracks.forEach(track => track.stop());
+                videoElem.srcObject = null;
+            }
+  
+            function dumpOptionsInfo() {
+                const videoTrack = videoElem.srcObject.getVideoTracks()[0];
+                
+                console.info("Track settings:");
+                console.info(JSON.stringify(videoTrack.getSettings(), null, 2));
+                console.info("Track constraints:");
+                console.info(JSON.stringify(videoTrack.getConstraints(), null, 2));
+            }
+          }
+
+        </script>
+    </body>
+</html>

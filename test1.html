@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        /*
+        //you can specify a STUN server here
+        const iceConfiguration = { }
+        iceConfiguration.iceServers = [];
+        //turn server
+        iceConfiguration.iceServers.push({
+                        urls: 'turn:my-turn-server.mycompany.com:19403',
+                        username: 'optional-username',
+                        credentials: 'auth-token'
+                    })
+        //stun  server
+        iceConfiguration.iceServers.push({
+                        urls: 'turn:stun1.l.google.com:19302' 
+                    })    
+        const localConnection = new RTCPeerConnection(iceConfiguration)
+        */
+        window.onload = function() {
+        
+            const localConnection = new RTCPeerConnection()
+            var answer = {};
+    
+            localConnection.onicecandidate = e =>  {
+                console.log(" NEW ice candidnat!! on localconnection reprinting SDP " )
+                console.log(JSON.stringify(localConnection.localDescription))
+            }
+            
+            
+            const sendChannel = localConnection.createDataChannel("sendChannel");
+            sendChannel.onmessage =e =>  console.log("messsage received!!!"  + e.data )
+            sendChannel.onopen = e => console.log("open!!!!");
+            sendChannel.onclose =e => console.log("closed!!!!!!");
+            
+            
+            localConnection.createOffer().then(o => localConnection.setLocalDescription(o) )
+    
+            // localConnection.setRemoteDescription (answer).then(a=>console.log("done"))
+
+        }
+
+    </script>
+</body>
+</html>

@@ -55,11 +55,17 @@
 
             pc.ontrack = event => {
               console.log("in on track handler")
-              event.streams[0].getTracks().forEach(track => {
-                //track.enabled = true;
+             
+              // event.streams[0].getTracks()[0].enabled = true;
+              event.streams[0].getVideoTracks().forEach(track => {
+                track.enabled = true;
                 remoteStream.addTrack(track);
+                videoElem.srcObject = remoteStream;
               });
-            };
+            }
+
+            pc.onicecandidate = e => console.log("New ice candidate! reprinting sdp");
+
 
             // Remote stream is empty, and will be updated by the peer connnection itself.
             // Listen to the ontrack event and pull tracks form incoming stream, then add stream to remoteStream Object.
@@ -77,7 +83,7 @@
               isSharing = true;
               if(boolSet == false) {
                 try {
-                  localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                  localStream = videoElem.srcObject = await navigator.mediaDevices.getUserMedia(displayMediaOptions);
                   
                   // Now make both MediaStreams availible on the peer connection.
                   // Local stream is already running in the browser, so we can get each track and push them to the peer connection.
@@ -89,6 +95,8 @@
 
 
                   console.log("LOCAL SET!!!");
+
+                  
 
                   pc.createOffer().then(function(offer) {
                     return pc.setLocalDescription(offer);
@@ -104,7 +112,7 @@
                     // An error occurred, so handle the failure to connect
                   });
 
-                  remoteElem.srcObject = remoteStream;
+                  // remoteElem.srcObject = remoteStream;
 
                   console.log("FINISHED LOCAL SET!!!");
                   console.log(localStream);
@@ -126,34 +134,6 @@
               console.log(isSharing);
 
               if(!isSharing && !boolSet) {
-                //localStream = acceptStream();
-                //console.log(localStream);
-
-                //localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
-                // Now make both MediaStreams availible on the peer connection.
-                // Local stream is already running in the browser, so we can get each track and push them to the peer connection.
-
-                //localStream.getTracks().forEach((track) => {
-                //  pc.addTrack(track, localStream);
-                //});
-
-                //pc.ontrack = ev => {
-                //  if (ev.streams && ev.streams[0]) {
-                //    videoElem.srcObject = ev.streams[0];
-                //  } else {
-                //    let inboundStream = new MediaStream(ev.track);
-                //    videoElem.srcObject = inboundStream;
-                //  }
-                //}
-
-                //pc.ontrack = event => {
-                //  console.log("in on track handler")
-                //  event.streams[0].getTracks().forEach(track => {
-                //    track.enabled = true;
-                //    remoteStream.addTrack(track);
-                //  });
-                //};
-
                 stuff = evt.data;
 
                 console.log("stuff: " + stuff);
@@ -164,6 +144,8 @@
                 pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
                 console.log("here we are");
                 boolSet = true;
+                
+                
 
                 pc.createAnswer().then(function(answer) {
                   return pc.setLocalDescription(answer);
@@ -193,8 +175,8 @@
 
             async function acceptStream() {
                 
-                localStream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
-                return localStream;
+              localStream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+              return localStream;
             } 
 
             // Options for getDisplayMedia()

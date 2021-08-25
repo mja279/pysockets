@@ -65,8 +65,8 @@
           var request = false;
           var pcid = null;
           var origin = false;
-          // var dc = null;
-          // var sendChannel = null;
+          var dc = null;
+          var sendChannel = null;
           
           const pc = new RTCPeerConnection();
           //   const pc2 = new RTCPeerConnection();
@@ -251,6 +251,14 @@
   
                 // if(!isSharing && !boolSet && evt.data !== "newPeer") {
                 if(data.type === "offer" && !request) {
+                  
+                  pc.ondatachannel = e => {
+                    pc.dc = e.channel;
+                    pc.dc.onmessage =e =>  console.log("messsage received!!!"  + e.data )
+                    pc.dc.onopen = e => console.log("open!!!!");
+                    pc.dc.onclose =e => console.log("closed!!!!!!");
+                  };
+
                   console.log("in on message")
                   console.log("offer recieved")
                   console.log(JSON.stringify(data.payload))
@@ -282,12 +290,6 @@
                     console.log("Local description set to offer, and answer sent to requesting Peer!")
                   });
 
-                  pc.ondatachannel = e => {
-                    pc.dc = e.channel;
-                    pc.dc.onmessage =e =>  console.log("messsage received!!!"  + e.data )
-                    pc.dc.onopen = e => console.log("open!!!!");
-                    pc.dc.onclose =e => console.log("closed!!!!!!");
-                  };
 
 
                   // const receiveChannel = e.channel;

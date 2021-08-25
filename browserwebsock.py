@@ -115,7 +115,8 @@ async def goodbye(websocket, path):
     #print ("WE HERE")
     #print(f"< {name}")
     #greeting = f"Hello {name}!"
-    print("IT IS WORKING!!!")
+    print(len(CLIENTS))
+    print("IT IS WORKING!!")
     dumbassBool = True;
     #await register(websocket, greeting)
 
@@ -128,7 +129,9 @@ async def goodbye(websocket, path):
             #print(f"< {name}")
             #greeting = f"Hello {name}!"
             ## async for message in websocket:
+           
             signal = await websocket.recv()
+            
             #img = numpy.array(screen)
             ## await websocket.send(greeting)
             # greeting = f"{name}"
@@ -136,6 +139,7 @@ async def goodbye(websocket, path):
             # message = greeting
             # print(f"{name[0]}")
             # print(name[0])
+            print(len(CLIENTS))
             print(signal)
             print("HOW MANY TIMES???")
             #await notify_clients(message)
