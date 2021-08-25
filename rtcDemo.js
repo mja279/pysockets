@@ -49,6 +49,7 @@
     // Create the remote connection and its event listeners
     
     remoteConnection = new RTCPeerConnection();
+    console.log("RIGHT BEFORE EVENT HANDLER!!!");
     remoteConnection.ondatachannel = receiveChannelCallback;
     
     // Set up the ICE candidates for the two peers
@@ -142,6 +143,7 @@
   // channel is ready to be connected to the remote.
   
   function receiveChannelCallback(event) {
+    console.log("IN THE CALLBACK!!!");
     receiveChannel = event.channel;
     receiveChannel.onmessage = handleReceiveMessage;
     receiveChannel.onopen = handleReceiveChannelStatusChange;
@@ -152,6 +154,7 @@
   // These are the data messages sent by the sending channel.
   
   function handleReceiveMessage(event) {
+    console.log("IN THE MESSAGE HANDLER!!!");
     var el = document.createElement("p");
     var txtNode = document.createTextNode(event.data);
     
