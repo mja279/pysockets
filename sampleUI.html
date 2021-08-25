@@ -13,13 +13,22 @@
         <div class="videos">
           <span>
             <h3>Local</h3>
+            <video id="video" controls autoplay playsisline></video>
+          </span>
+
+          <span>
+            <h3>Remote</h3>
+            <video id="remote" controls autoplay playsisline></video>
+          </span>
+          <!--<span>
+            <h3>Local</h3>
             <video id="video" autoplay playsisline></video>
           </span>
 
           <span>
             <h3>Remote</h3>
             <video id="remote" autoplay playsisline></video>
-          </span>
+          </span>-->
         </div>
         <strong>Log:</strong>
         <br>
@@ -38,11 +47,20 @@
           //var trackList = [];
           var isSharing = false;
           var systemicRacism = 0;
-          
+          var institutionalBias = 0; 
+          var offerICE;
           // Establish an Empty remote stream MediaStream Object. 
           var remoteStream = new MediaStream();
           
-          const pc = new RTCPeerConnection();
+          const servers = {
+              iceServers: [
+                {
+                  urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
+                },
+              ],
+              iceCandidatePoolSize: 10,
+          };
+          const pc = new RTCPeerConnection(servers);
           //const pc = new RTCPeerConnection();
 
           var boolSet = false;
@@ -90,19 +108,26 @@
 
                   console.log("LOCAL SET!!!");
 
-                  pc.createOffer().then(function(offer) {
-                    return pc.setLocalDescription(offer);
-                  })
-                  .then(function() {
-                    socket.send(JSON.stringify({
-                      name: "local",
-                      type: "video-offer",
-                      sdp: pc.localDescription
-                    }));
-                  })
-                  .catch(function(reason) {
-                    // An error occurred, so handle the failure to connect
-                  });
+                  pc.onicecandidate = e => socket.send(JSON.stringify({
+                            name: "local",
+                            type: "video-offer",
+                            sdp: pc.localDescription
+                       }));
+                  pc.createOffer().then(o => pc.setLocalDescription(o)).then(a => console.log("set succesfully"));
+                  //pc.createOffer().then(function(offer) {
+                  //  return pc.setLocalDescription(offer);
+                  //})
+                  //.then(function() {
+                  //  socket.send(JSON.stringify({
+                  //    name: "local",
+                  //    type: "video-offer",
+                  //    sdp: pc.localDescription
+                  //    //offerICECandidate: offerICE
+                  //  }));
+                  //})
+                  //.catch(function(reason) {
+                  //  // An error occurred, so handle the failure to connect
+                  //});
 
                   remoteElem.srcObject = remoteStream;
 
@@ -120,73 +145,86 @@
             // THIS IS WHERE THE ONMESSAGE HAPPENS!!!!
             socket.onmessage = function (evt) {
               systemicRacism += 1;
+              institutionalBias += 1;
+
               // var stuff;
 
 
               console.log(isSharing);
 
               if(!isSharing && !boolSet) {
-                //localStream = acceptStream();
-                //console.log(localStream);
-
-                //localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
-                // Now make both MediaStreams availible on the peer connection.
-                // Local stream is already running in the browser, so we can get each track and push them to the peer connection.
-
-                //localStream.getTracks().forEach((track) => {
-                //  pc.addTrack(track, localStream);
-                //});
-
-                //pc.ontrack = ev => {
-                //  if (ev.streams && ev.streams[0]) {
-                //    videoElem.srcObject = ev.streams[0];
-                //  } else {
-                //    let inboundStream = new MediaStream(ev.track);
-                //    videoElem.srcObject = inboundStream;
-                //  }
-                //}
-
-                //pc.ontrack = event => {
-                //  console.log("in on track handler")
-                //  event.streams[0].getTracks().forEach(track => {
-                //    track.enabled = true;
-                //    remoteStream.addTrack(track);
-                //  });
-                //};
-
                 stuff = evt.data;
+                var answerICE;
 
                 console.log("stuff: " + stuff);
                 customJSON = JSON.parse(stuff);
 
                 console.log(customJSON);
+                //pc.onicecandidate = e => pc.addIceCandidate();
 
-                pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
-                console.log("here we are");
-                boolSet = true;
-
-                pc.createAnswer().then(function(answer) {
-                  return pc.setLocalDescription(answer);
-                })
-                .then(function() {
-                  socket.send(JSON.stringify({
+                //pc.onicecandidate = e => {
+                //  if(e.candidate){
+                //    answerICE = e.candidate;
+                //    socket.send(JSON.stringify({
+                //      //name: "remote",
+                //      //type: "video-answer",
+                //      //sdp: pc.localDescription,
+                //      answerICECandidate: answerICE
+                //    }));
+                //      //socket.send(JSON.stringify({
+                //      //    name: "iceCandidate",
+                //      //    type: "answerCandidate"
+                //      //}));
+                //  }
+                //};
+                pc.onicecandidate = e => socket.send(JSON.stringify({
                     name: "remote",
                     type: "video-answer",
                     sdp: pc.localDescription
-                  }));
-                })
-                .catch(function(reason) {
-                  // An error occurred, so handle the failure to connect
-                });    
+                }));
+
+                pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+
+                pc.createAnswer().then(a => pc.setLocalDescription(a)).then(a => console.log("answer created"));
+
+                //pc.addIceCandidate(JSON.parse(stuff).offerICE);
+                console.log("here we are");
+                boolSet = true;
+
+                //pc.createAnswer().then(function(answer) {
+                //  return pc.setLocalDescription(answer);
+                //})
+                //.then(function() {
+                //  socket.send(JSON.stringify({
+                //    name: "remote",
+                //    type: "video-answer",
+                //    sdp: pc.localDescription,
+                //    //answerICECandidate: answerICE
+                //  }));
+                //})
+                //.catch(function(reason) {
+                //  // An error occurred, so handle the failure to connect
+                //});    
                 remoteElem.srcObject = remoteStream;
+                //}
               }
 
-              if(isSharing && (systemicRacism > 1)) {
+              if(systemicRacism == 5) {
+                boolSet = true;
+              }
+              if(isSharing && boolSet) {
+                //if(institutionalBias > 3) {
+                //    pc.addIceCandidate(JSON.parse(stuff).answerICECandidate);
+                //}
                 //boolSet = true;
+                //else {
                 stuff = evt.data;
                 console.log("in isSharing Block")
                 console.log("stuff: " + stuff);
+                //pc.onicecandidate = e => pc.addIceCandidate();
                 pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+                //pc.addIceCandidate(JSON.parse(stuff).answerICECandidate);
+                //}
               }
 
             }
