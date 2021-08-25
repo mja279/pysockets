@@ -93,6 +93,7 @@
               //console.log("HERE-0");
               //var trackList = [];
               isSharing = true;
+              boolSet = false;
               if(boolSet == false) {
                 try {
                   localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
@@ -155,7 +156,7 @@
               if(evt.data == "STOPPED") {
                 stopRemoteCapture();
               }
-              if(!isSharing && !boolSet) {
+              if(!isSharing && !boolSet && (institutionalBias > 0)) {
                 stuff = evt.data;
                 var answerICE;
 
@@ -212,7 +213,7 @@
                 //}
               }
 
-              if(systemicRacism == 5) {
+              if(systemicRacism == 5 || systemicRacism == 4) {
                 boolSet = true;
               }
               if(isSharing && boolSet) {
@@ -269,14 +270,21 @@
                 
                 tracks.forEach(track => track.stop());
                 videoElem.srcObject = null;
+                boolSet = false;
                 socket.send("STOPPED");
             }
 
             function stopRemoteCapture(evt) {
                 let tracks = remoteElem.srcObject.getTracks();
                 
-                tracks.forEach(track => track.stop());
+                tracks.forEach(track => {
+                    track.stop()
+                    remoteStream.removeTrack(track);
+                });
                 remoteElem.srcObject = null;
+                systemicRacism = 0;
+                boolSet = false;
+                institutionalBias = 0;
             }
   
             function dumpOptionsInfo() {
