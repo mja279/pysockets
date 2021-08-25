@@ -274,6 +274,7 @@
                 socket.send("STOPPED");
             }
 
+            //Needs work to properly renegotiate ICE candidates
             function stopRemoteCapture(evt) {
                 let tracks = remoteElem.srcObject.getTracks();
                 
