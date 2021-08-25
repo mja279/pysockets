@@ -152,6 +152,9 @@
 
               console.log(isSharing);
 
+              if(evt.data == "STOPPED") {
+                stopRemoteCapture();
+              }
               if(!isSharing && !boolSet) {
                 stuff = evt.data;
                 var answerICE;
@@ -266,6 +269,14 @@
                 
                 tracks.forEach(track => track.stop());
                 videoElem.srcObject = null;
+                socket.send("STOPPED");
+            }
+
+            function stopRemoteCapture(evt) {
+                let tracks = remoteElem.srcObject.getTracks();
+                
+                tracks.forEach(track => track.stop());
+                remoteElem.srcObject = null;
             }
   
             function dumpOptionsInfo() {

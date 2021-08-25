@@ -196,7 +196,7 @@ async def goodbye(websocket, path):
 
 # start_server = websockets.serve(shareScreen, "127.0.0.1", 5678)
 # start_server = websockets.serve(hello, "127.0.0.1", 5678)
-start_server = websockets.serve(goodbye, "127.0.0.1", 5678)
+start_server = websockets.serve(goodbye, "ec2-52-0-207-17.compute-1.amazonaws.com", 5678)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
