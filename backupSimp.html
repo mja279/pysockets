@@ -1,0 +1,270 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+
+    <body>
+        <p>This example shows you the contents of the selected part of your display.
+        Click the Start Capture button to begin.</p>
+        <p><button id="start">Start Capture</button>&nbsp;<button id="stop">Stop Capture</button></p><p><button id="accept">Accept Stream</button>
+        <div class="videos">
+          <span>
+            <h3>Local</h3>
+            <video id="video" controls autoplay playsisline></video>
+          </span>
+
+          <span>
+            <h3>Remote</h3>
+            <video id="remote" controls autoplay playsisline></video>
+          </span>
+        </div>
+        <strong>Log:</strong>
+        <br>
+        <pre id="log"></pre>
+        
+        <script>
+          
+          const videoElem = document.getElementById("video");
+          const remoteElem = document.getElementById("remote");
+          const logElem = document.getElementById("log");
+          const startElem = document.getElementById("start");
+          const acceptElem = document.getElementById("accept");
+          const stopElem = document.getElementById("stop");
+          
+          var isSharing = false;
+          var seshDescSet = false;
+          var systemicRacism = 0;
+          var institutionalBias = 0; 
+          var offerICE;
+
+          var remoteStream = new MediaStream();
+          
+          const servers = {
+            iceServers: [
+              {
+                urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
+              },
+            ],
+            iceCandidatePoolSize: 10,
+          };
+          const pc = new RTCPeerConnection(servers);
+          //const pc = new RTCPeerConnection();
+          
+          var boolSet = false;
+          
+          var stuff;
+          
+          var displayMediaOptions = {
+            video: {
+              cursor: "always"
+            },
+            audio: true
+          };
+
+          window.onload = function() {
+            var socket = new WebSocket("ws://ec2-52-0-207-17.compute-1.amazonaws.com:5678/");
+
+            pc.ontrack = event => {
+              console.log("in on track handler")
+              event.streams[0].getTracks().forEach(track => {
+                //track.enabled = true;
+                remoteStream.addTrack(track);   
+              });                               
+            };         
+            
+            //             -.
+            //               -._ . -.-. -.
+            //              _._ -..   .--.  .
+            //           .-'   '-.  -|\/    \|   -.
+            //         .'         '-.\   (o)O) -.
+            //        /         /         _.--.\ '. -. -.
+            //       /|    (    |  /  -. ( -._( -._ '. '.
+            //      /  \    \-.__\ \_.-'..__'.   -, '. .'
+            //      |  /\    |  / \ \     --')/  .-'.'.'
+            //  .._/  /  /  /  / / \ \          .' . .' .'
+            // /  ___/  |  /   \ \  \ \__       '.'. . .
+            // \  \___  \ (     \ \  . .     .' . ' .'
+            //  \ -.\ (  -.__ | \    )//   .'  .' .-'
+            //   \_-._\  \  -.)//    "".-' .-' .' .'
+            //     `-'    \ -.\ ""..--''  .-' .'
+            //             /    .' .-'.-'  .-' .-'
+            //                 .-'.' .'  .' .-'
+            ///////////////////////////////
+
+            async function startCapture() {
+              systemicRacism = 0; 
+              logElem.innerHTML = "";
+              isSharing = true;
+              boolSet = false;
+              
+              if(boolSet == false) {
+                try {
+                  localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                  
+                  localStream.getTracks().forEach((track) => {
+                    console.log("AM I AT LEAST OVER HERE THOUGH????");
+                    pc.addTrack(track, localStream);
+                  });
+                  
+                  console.log("LOCAL SET!!!");
+
+                  pc.onicecandidate = e => socket.send(JSON.stringify({
+                    name: "local",
+                    type: "video-offer",
+                            sdp: pc.localDescription
+                          }));
+
+                          pc.createOffer().then(o => pc.setLocalDescription(o)).then(a => console.log("set succesfully"));
+
+                          remoteElem.srcObject = remoteStream;
+                  console.log("FINISHED LOCAL SET!!!");
+                  console.log(localStream);
+                  console.log(localStream.getTracks());
+                  dumpOptionsInfo();
+                } catch(err) {
+                  console.error("Error: " + err);
+                };
+              };
+            };
+                        //// 
+                      ////
+                    ////////
+                //////////////////
+            ////////////////////////// 
+                      // __▒▒▒▒▒
+                      // —-▒▒▒▒▒▒▒▒▒
+                      // —–▓▓▓░░▓░
+                      // —▓░▓░░░▓░░░
+                      // —▓░▓▓░░░▓░░░
+                      // —▓▓░░░░▓▓▓▓
+                      // ——░░░░░░░░
+                      // —-▓▓▒▓▓▓▒▓▓
+                      // –▓▓▓▒▓▓▓▒▓▓▓
+                      // ▓▓▓▓▒▒▒▒▒▓▓▓▓
+                      // ░░▓▒░▒▒▒░▒▓░░
+                      // ░░░▒▒▒▒▒▒▒░░░
+                      // ░░▒▒▒▒▒▒▒▒▒░░
+                      // —-▒▒▒ ——▒▒▒
+                      // –▓▓▓———-▓▓▓
+                      // ▓▓▓▓———-▓▓▓▓
+            ////////////////////////////////////
+
+            socket.onmessage = function (evt) {
+              systemicRacism += 1;
+              institutionalBias += 1;
+              console.log(isSharing);
+
+              if(evt.data == "STOPPED") {
+                stopRemoteCapture();
+              };
+              if(!isSharing && !boolSet && (institutionalBias > 0)) {
+                stuff = evt.data;
+                var answerICE;
+
+                console.log("stuff: " + stuff);
+                customJSON = JSON.parse(stuff);
+                console.log(customJSON);
+                
+                pc.onicecandidate = e => socket.send(JSON.stringify({
+                    name: "remote",
+                    type: "video-answer",
+                    sdp: pc.localDescription
+                }));
+
+                pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+                pc.restartIce();
+                pc.createAnswer().then(a => pc.setLocalDescription(a)).then(a => console.log("answer created"));
+
+                console.log("here we are");
+                boolSet = true;
+
+                remoteElem.srcObject = remoteStream;
+              };
+
+              if(systemicRacism == 4) {
+                boolSet = true;
+              };
+              if(isSharing && boolSet) {
+                stuff = evt.data;
+                console.log("in isSharing Block")
+                console.log("stuff: " + stuff);
+                
+                pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
+                seshDescSet = true;
+              };
+            };
+
+            // .,--.
+            // .'   \
+            // | ..  |
+            // |{)(} .'
+            // / /|  |.
+            // (/ /__)
+            //   |||
+            //     /'
+            //     //
+            //   .'''\
+            // /:::/\
+            // ( /|::|\
+            // :|;;|{/
+            // '.;|**|;,/
+            //   _ /
+            //   | 
+            //   | 
+            //   | 
+            //   | 
+            // .| ||.
+            // ;,.-._,;
+            ///////////
+
+            startElem.addEventListener("click", function(evt) {
+              startCapture();
+            }, false);
+            
+            stopElem.addEventListener("click", function(evt) {
+              stopCapture();
+            }, false);
+
+            acceptElem.addEventListener("click", function(evt) {
+              acceptStream();
+            }, false);
+  
+            console.log = msg => logElem.innerHTML += `${msg}<br>`;
+            console.error = msg => logElem.innerHTML += `<span class="error">${msg}</span><br>`;
+            console.warn = msg => logElem.innerHTML += `<span class="warn">${msg}<span><br>`;
+            console.info = msg => logElem.innerHTML += `<span class="info">${msg}</span><br>`;
+  
+            function stopCapture(evt) {
+              let tracks = videoElem.srcObject.getTracks();
+              
+              tracks.forEach(track => track.stop());
+              videoElem.srcObject = null;
+              boolSet = false;
+              socket.send("STOPPED");
+            };
+
+            function stopRemoteCapture(evt) {
+              let tracks = remoteElem.srcObject.getTracks();
+              
+              tracks.forEach(track => {
+                  track.stop();
+                  remoteStream.removeTrack(track);
+              });
+              remoteElem.srcObject = null;
+              systemicRacism = 0;
+              boolSet = false;
+              institutionalBias = 0;
+            };
+  
+            function dumpOptionsInfo() {
+              const videoTrack = videoElem.srcObject.getVideoTracks()[0];
+              
+              console.info("Track settings:");
+              console.info(JSON.stringify(videoTrack.getSettings(), null, 2));
+              console.info("Track constraints:");
+              console.info(JSON.stringify(videoTrack.getConstraints(), null, 2));
+            }
+          }
+        </script>
+    </body>
+</html>
