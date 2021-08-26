@@ -1,0 +1,158 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="./style.css">
+    </head>
+
+    <body>
+        <p>
+            <button id="online">Go Online</button>&nbsp;
+            <button id="start">Start Capture</button>&nbsp;
+            <button id="stop">Stop Capture</button>
+        </p>
+        
+        <div class="videos">
+          <span>
+            <h3>Local</h3>
+            <video id="video" controls autoplay playsisline></video>
+          </span>
+
+          <span>
+            <h3>Remote</h3>
+            <video id="remote" controls autoplay playsisline></video>
+          </span>
+        </div>
+
+        <button class="open-button" onclick="openForm()">Chat</button>
+
+        <div class="chat-popup" id="myForm">
+          <form action="/action_page.php" class="form-container">
+            <h1>Chat</h1>
+        
+            <label for="msg"><b>Message</b></label>
+            <textarea placeholder="Type message.." name="msg" required></textarea>
+        
+            <button type="submit" class="btn" id="send">Send</button>
+            <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+          </form>
+        </div>
+
+        <strong>Log:</strong>
+        <br>
+        <pre id="log"></pre>
+
+        <script>
+            var offer;
+            var answer;
+            // var rc;
+            // var lc;
+            var dc;
+            var pc;
+            var data;
+            var socket;
+            var count = 0;
+            var isLocal = false;
+            
+            const videoElem = document.getElementById("video");
+            const remoteElem = document.getElementById("remote");
+            const logElem = document.getElementById("log");
+            const onlineElem = document.getElementById("online");
+            const startElem = document.getElementById("start");
+            const stopElem = document.getElementById("stop");
+            const sendElem = document.getElementById("send");
+            const formElem = document.getElementById('myForm');
+            // var form = document.getElementById('myForm').elements;
+            // var messageField = form["message"];
+
+            formElem.onsubmit = function(event) {
+                event.preventDefault();
+                message = event.srcElement[0].value;
+                if(isLocal) {
+                    dc.send(message);
+                }else{
+                    pc.dc.send(message);
+                };
+            };
+
+            function printMsg(event) {
+                // need to work on print message
+                message = event.data
+            };
+
+            function openForm() {
+                document.getElementById("myForm").style.display = "block";
+                // connectDataChannel();
+            };
+
+            function closeForm() {
+                document.getElementById("myForm").style.display = "none";
+            };
+
+            onlineElem.onclick = function online(event) {
+                socket = new WebSocket("ws://127.0.0.1:5678/");
+
+                socket.onopen = function(event) {
+                    socket.send("new connection");
+                };
+                
+                socket.onmessage = function(event) {
+                    data = JSON.parse(event.data);
+    
+                    if(data.type == "new connection" && !isLocal){
+                        if(data.count < 2) {
+                            console.log(data);
+                            isLocal = true;
+
+                            pc = new RTCPeerConnection();
+                            dc = pc.createDataChannel("channel");
+                            dc.onmessage = e => printMsg(e.data);
+                            dc.onopen = e => console.log("connection open");
+                            pc.onicecandidate = e => socket.send(JSON.stringify({
+                                name: "local",
+                                type: "video-offer",
+                                sdp: pc.localDescription
+                            }));
+                        }else{
+                            console.log(data);
+                            socket.send(JSON.stringify({
+                                name: "remote",
+                                type: "video-offer-request"
+                            }));
+                        };
+                    };
+    
+                    if(isLocal && data.type == "video-offer-request") {
+                        // should fire off onicecandidates where we can send a message to pass the description to the remote client
+                        pc.createOffer().then(o => pc.setLocalDescription(o)).then(a => console.log("set succesfully")); 
+    
+                    }else if(!isLocal && data.type == "video-offer") {
+        
+                        offer = data.sdp;
+        
+                        pc = new RTCPeerConnection();
+        
+                        pc.onicecandidate = e => socket.send(JSON.stringify({
+                            name: "remote",
+                            type: "video-answer",
+                            sdp: pc.localDescription
+                        }));
+        
+                        pc.ondatachannel = e => {
+                            pc.dc = e.channel;
+                            pc.dc.onmessage = e => console.log("new message: " + e.data);
+                            pc.dc.onopen = e => console.log("connected");
+                        };
+        
+                        pc.setRemoteDescription(offer).then(a => console.log("offer set"));
+        
+                        pc.createAnswer().then(a => pc.setLocalDescription(a)).then(a => console.log("answer created"));
+        
+                        // rc.dc.send("fine what about u fam");
+                    }else if(isLocal && data.type == "video-answer") {
+                        answer = data.sdp;
+                        pc.setRemoteDescription(answer);
+                    };
+                };
+            };   
+        </script>
+    </body>
+</html>

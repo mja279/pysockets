@@ -46,8 +46,8 @@
             ],
             iceCandidatePoolSize: 10,
           };
-          // var pc;
-          var pc = new RTCPeerConnection(servers);
+          const pc = new RTCPeerConnection(servers);
+          //const pc = new RTCPeerConnection();
           
           var boolSet = false;
           
@@ -72,7 +72,7 @@
                   remoteElem.srcObject = remoteStream;
                 }
                 remoteStream.addTrack(ev.track);
-              };
+              }
             };
 
             //             -.
@@ -95,24 +95,21 @@
             ///////////////////////////////
 
             async function startCapture() {
-
-              pc = new RTCPeerConnection(servers);
-
-              // systemicRacism = 0; 
+              systemicRacism = 0; 
               logElem.innerHTML = "";
               isSharing = true;
-              // boolSet = false;
+              boolSet = false;
               
-              try {
-                localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
-                
-                localStream.getTracks().forEach((track) => {
-                  pc.addTrack(track);
-                });
-                
-                console.log("LOCAL SET!!!");
-                if(boolSet == false) {
-                  pc.restartIce();
+              if(boolSet == false) {
+                try {
+                  localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                  
+                  localStream.getTracks().forEach((track) => {
+                    pc.addTrack(track);
+                  });
+                  
+                  console.log("LOCAL SET!!!");
+                  
                   pc.onnegotiationneeded = function() {
                     pc.createOffer().then(function(offer) {
                       return pc.setLocalDescription(offer);
@@ -126,20 +123,19 @@
                     })
                     .catch("error de abrto");
                   };
+
+                  // pc.onicecandidate = e => socket.send(JSON.stringify({
+                  //   name: "local",
+                  //   type: "video-offer",
+                  //   sdp: pc.localDescription
+                  // }));
+
+                  // pc.createOffer().then(o => pc.setLocalDescription(o)).then(a => console.log("set succesfully"));
+                  dumpOptionsInfo();
+                } catch(err) {
+                  console.error("Error: " + err);
                 };
-
-                // pc.onicecandidate = e => socket.send(JSON.stringify({
-                //   name: "local",
-                //   type: "video-offer",
-                //   sdp: pc.localDescription
-                // }));
-
-                // pc.createOffer().then(o => pc.setLocalDescription(o)).then(a => console.log("set succesfully"));
-                dumpOptionsInfo();
-              } catch(err) {
-                console.error("Error: " + err);
               };
-            
             };
                         //// 
                       ////
@@ -169,18 +165,15 @@
               systemicRacism += 1;
               institutionalBias += 1;
               console.log(isSharing);
-              boolSet = true;
 
-              
               if(evt.data == "STOPPED") {
                 stopRemoteCapture();
               };
-              
+
               if(msg.name == "local" && !isSharing) {
                 stuff = evt.data;
                 var answerICE;
-                pc = new RTCPeerConnection(servers);
-                
+
                 // pc.ontrack = ev => {
                 //   if (ev.streams && ev.streams[0]) {
                 //     remoteElem.srcObject = ev.streams[0];
@@ -200,7 +193,7 @@
                 //     remoteStream.addTrack(track);   
                 //   });                               
                 // };     
-                
+
                 pc.onicecandidate = e => socket.send(JSON.stringify({
                     name: "remote",
                     type: "video-answer",
