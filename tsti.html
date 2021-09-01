@@ -29,6 +29,7 @@
             <h1>Chat</h1>
         
             <label for="msg"><b>Message</b></label>
+            <div id="chat"></div>
             <textarea placeholder="Type message.." name="msg" required></textarea>
         
             <button type="submit" class="btn" id="send">Send</button>
@@ -51,6 +52,16 @@
             var socket;
             var count = 0;
             var isLocal = false;
+            var pcid = null;
+
+            const servers = {
+              iceServers: [
+                {
+                  urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
+                },
+              ],
+              iceCandidatePoolSize: 10,
+            };
             
             const videoElem = document.getElementById("video");
             const remoteElem = document.getElementById("remote");
@@ -59,24 +70,48 @@
             const startElem = document.getElementById("start");
             const stopElem = document.getElementById("stop");
             const sendElem = document.getElementById("send");
-            const formElem = document.getElementById('myForm');
+            const formElem = document.getElementById("myForm");
+            const chatElem = document.getElementById("chat");
             // var form = document.getElementById('myForm').elements;
             // var messageField = form["message"];
 
             formElem.onsubmit = function(event) {
                 event.preventDefault();
-                message = event.srcElement[0].value;
+                var message = event.srcElement[0].value;
+                var payload = JSON.stringify({ id: pcid, msg: message});
+                printMsg(payload)
                 if(isLocal) {
-                    dc.send(message);
+                    dc.send(payload);
                 }else{
-                    pc.dc.send(message);
+                    pc.dc.send(payload);
+                    
                 };
             };
 
             function printMsg(event) {
                 // need to work on print message
-                message = event.data
+                var payload = JSON.parse(event)
+                if(pcid == payload.id) {
+                    type = "sent";
+                }else if(pcid != payload.id){
+                    type = "recieved";
+                }else if(payload.msg == "closed"){
+                    type = payload.msg;
+                };
+                
+                var message = payload.msg == "closed" ? pcid + " left chat" : payload.msg;
+                msgElem = document.createElement("div");
+                msgElem.classList.add(payload.msg == "closed" ? payload.msg : type);
+                msgElem.innerHTML = `<p id="text">${message}</p>` ;
+                chatElem.appendChild(msgElem);
             };
+
+            function uuidv4() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+                });
+            }
 
             function openForm() {
                 document.getElementById("myForm").style.display = "block";
@@ -84,10 +119,21 @@
             };
 
             function closeForm() {
+                var payload = JSON.stringify({ id: pcid, msg: "closed"});
+                if(isLocal) {
+                    dc.send(payload);
+                    dc.close();
+                }else{
+                    pc.dc.send(payload);
+                    pc.dc.close();
+                };
+
                 document.getElementById("myForm").style.display = "none";
             };
 
             onlineElem.onclick = function online(event) {
+                pcid = uuidv4();
+
                 socket = new WebSocket("ws://127.0.0.1:5678/");
 
                 socket.onopen = function(event) {
@@ -102,15 +148,23 @@
                             console.log(data);
                             isLocal = true;
 
-                            pc = new RTCPeerConnection();
+                            pc = new RTCPeerConnection(servers);
                             dc = pc.createDataChannel("channel");
                             dc.onmessage = e => printMsg(e.data);
                             dc.onopen = e => console.log("connection open");
-                            pc.onicecandidate = e => socket.send(JSON.stringify({
-                                name: "local",
-                                type: "video-offer",
-                                sdp: pc.localDescription
-                            }));
+                            dc.onclose = e => console.log("connection closed");
+                            pc.onicecandidate = e => {
+                                if(pc.iceGatheringState == "complete") {
+                                    socket.send(
+                                        JSON.stringify({
+                                            name: "local",
+                                            type: "video-offer",
+                                            sdp: pc.localDescription
+                                        })
+                                    );
+                                };
+                            };
+
                         }else{
                             console.log(data);
                             socket.send(JSON.stringify({
@@ -122,24 +176,31 @@
     
                     if(isLocal && data.type == "video-offer-request") {
                         // should fire off onicecandidates where we can send a message to pass the description to the remote client
-                        pc.createOffer().then(o => pc.setLocalDescription(o)).then(a => console.log("set succesfully")); 
+                        pc.createOffer().then(o => pc.setLocalDescription(o)).then(a => console.log("offer set")); 
     
                     }else if(!isLocal && data.type == "video-offer") {
         
                         offer = data.sdp;
         
-                        pc = new RTCPeerConnection();
-        
-                        pc.onicecandidate = e => socket.send(JSON.stringify({
-                            name: "remote",
-                            type: "video-answer",
-                            sdp: pc.localDescription
-                        }));
-        
+                        pc = new RTCPeerConnection(servers);
+
+                        pc.onicecandidate = e => {
+                            if(pc.iceGatheringState == "complete") {
+                                socket.send(
+                                    JSON.stringify({
+                                        name: "remote",
+                                        type: "video-answer",
+                                        sdp: pc.localDescription
+                                    })
+                                );
+                            };
+                        };
+
                         pc.ondatachannel = e => {
                             pc.dc = e.channel;
-                            pc.dc.onmessage = e => console.log("new message: " + e.data);
-                            pc.dc.onopen = e => console.log("connected");
+                            pc.dc.onmessage = e => printMsg(e.data);
+                            pc.dc.onopen = e => console.log("connection open");
+                            pc.dc.onclose = e => console.log("connection closed");
                         };
         
                         pc.setRemoteDescription(offer).then(a => console.log("offer set"));
@@ -149,7 +210,7 @@
                         // rc.dc.send("fine what about u fam");
                     }else if(isLocal && data.type == "video-answer") {
                         answer = data.sdp;
-                        pc.setRemoteDescription(answer);
+                        pc.setRemoteDescription(answer).then(a => console.log("answer set"));
                     };
                 };
             };   

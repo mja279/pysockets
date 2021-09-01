@@ -56,18 +56,60 @@ video {
 /* Full-width textarea */
 .form-container textarea {
   width: 100%;
-  padding: 15px;
+  padding: 10px;
   margin: 5px 0 22px 0;
   border: none;
   background: #f1f1f1;
   resize: none;
-  min-height: 100px;
+  min-height: 20px;
 }
 
 /* When the textarea gets focus, do something */
 .form-container textarea:focus {
   background-color: #ddd;
   outline: none;
+}
+
+#chat {
+  width: 100%;
+  overflow: auto;
+  max-height: 150px;
+}
+
+#text {
+  margin: 0px;
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+.sent {
+  width: 100%;
+  border: none;
+  color: #919191;
+  background: #d0ecf380;
+  resize: none;
+  min-height: 20px;
+  text-align: right;
+}
+
+.recieved {
+  width: 100%;
+  border: none;
+  color: #5fb5c4;
+  background: #d0ecf380;
+  resize: none;
+  min-height: 20px;
+  text-align: left;
+}
+
+.closed {
+  width: 100%;
+  border: none;
+  color: #c45f5f;
+  background: #91a1a580;
+  resize: none;
+  min-height: 20px;
+  text-align: center;
 }
 
 /* Set a style for the submit/send button */
