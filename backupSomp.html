@@ -23,7 +23,6 @@
         <pre id="log"></pre>
         
         <script>
-          
           const videoElem = document.getElementById("video");
           const remoteElem = document.getElementById("remote");
           const logElem = document.getElementById("log");
@@ -37,17 +36,20 @@
           var institutionalBias = 0; 
           var offerICE;
 
-          var remoteStream = new MediaStream();
+          var remoteStream = null;
           
-          const servers = {
-            iceServers: [
-              {
-                urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
-              },
-            ],
-            iceCandidatePoolSize: 10,
-          };
-          const pc = new RTCPeerConnection(servers);
+          //const servers = {
+          //  iceServers: [
+          //    {
+          //      urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
+          //    },
+          //  ],
+          //  iceCandidatePoolSize: 10,
+          //};
+
+          var pc = null;
+
+          //const pc = new RTCPeerConnection(servers);
           //const pc = new RTCPeerConnection();
           
           var boolSet = false;
@@ -62,16 +64,74 @@
           };
 
           window.onload = function() {
-            var socket = new WebSocket("ws://ec2-52-0-207-17.compute-1.amazonaws.com:5678/");
-
-            pc.ontrack = event => {
-              console.log("in on track handler")
-              event.streams[0].getTracks().forEach(track => {
-                //track.enabled = true;
-                remoteStream.addTrack(track);   
-              });                               
-            };         
+            //var socket = new WebSocket("ws://ec2-52-0-207-17.compute-1.amazonaws.com:5678/");    
+            var socket = new WebSocket("ws://127.0.0.1:5678/");    
             
+            async function createPeerConnection() {
+              //log("Setting up a connection...");
+            
+              // Create an RTCPeerConnection which knows to use our chosen
+              // STUN server.
+            
+              const servers = {
+                iceServers: [
+                  {
+                    urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
+                  },
+                ],
+                iceCandidatePoolSize: 10,
+              };
+            
+              pc = new RTCPeerConnection(servers);
+              // Set up event handlers for the ICE negotiation process.
+            
+              pc.onnegotiationneeded = function() {
+                pc.createOffer().then(function(offer) {
+                  return pc.setLocalDescription(offer);
+                })
+                .then(function() {
+                  socket.send(JSON.stringify({
+                    name: "local",
+                    type: "video-offer",
+                    sdp: pc.localDescription
+                  }));
+                })
+                .catch("error de abrto");
+              };
+
+              pc.onicecandidate = e => 
+                //if(e.candidate) {
+                    socket.send(JSON.stringify({
+                        type: "new-ice-candidate",
+                        candidate: e.candidate
+                    }));
+                //}
+
+              pc.ontrack = ev => {
+                if (ev.streams && ev.streams[0]) {
+                  remoteElem.srcObject = ev.streams[0];
+                } else {
+                  if (!remoteStream) {
+                    remoteStream = new MediaStream();
+                    remoteElem.srcObject = remoteStream;
+                  }
+                  remoteStream.addTrack(ev.track);
+                }
+              };
+            }
+
+            //pc.ontrack = ev => {
+            //  if (ev.streams && ev.streams[0]) {
+            //    remoteElem.srcObject = ev.streams[0];
+            //  } else {
+            //    if (!remoteStream) {
+            //      remoteStream = new MediaStream();
+            //      remoteElem.srcObject = remoteStream;
+            //    }
+            //    remoteStream.addTrack(ev.track);
+            //  }
+            //};
+
             //             -.
             //               -._ . -.-. -.
             //              _._ -..   .--.  .
@@ -98,28 +158,19 @@
               boolSet = false;
               
               if(boolSet == false) {
+                if(!pc) {
+                  createPeerConnection();
+                }
+
                 try {
                   localStream = videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
                   
                   localStream.getTracks().forEach((track) => {
-                    console.log("AM I AT LEAST OVER HERE THOUGH????");
-                    pc.addTrack(track, localStream);
+                    pc.addTrack(track);
                   });
                   
                   console.log("LOCAL SET!!!");
-
-                  pc.onicecandidate = e => socket.send(JSON.stringify({
-                    name: "local",
-                    type: "video-offer",
-                            sdp: pc.localDescription
-                          }));
-
-                          pc.createOffer().then(o => pc.setLocalDescription(o)).then(a => console.log("set succesfully"));
-
-                          remoteElem.srcObject = remoteStream;
-                  console.log("FINISHED LOCAL SET!!!");
-                  console.log(localStream);
-                  console.log(localStream.getTracks());
+                  
                   dumpOptionsInfo();
                 } catch(err) {
                   console.error("Error: " + err);
@@ -150,6 +201,10 @@
             ////////////////////////////////////
 
             socket.onmessage = function (evt) {
+              if(!pc) {
+                createPeerConnection();
+              }
+              msg = JSON.parse(evt.data);
               systemicRacism += 1;
               institutionalBias += 1;
               console.log(isSharing);
@@ -157,34 +212,53 @@
               if(evt.data == "STOPPED") {
                 stopRemoteCapture();
               };
-              if(!isSharing && !boolSet && (institutionalBias > 0)) {
-                stuff = evt.data;
-                var answerICE;
 
-                console.log("stuff: " + stuff);
-                customJSON = JSON.parse(stuff);
-                console.log(customJSON);
+              if(msg.name == "local" && !isSharing) {
+                  stuff = evt.data;
+
+                  var remoteStream = null;
                 
-                pc.onicecandidate = e => socket.send(JSON.stringify({
-                    name: "remote",
-                    type: "video-answer",
-                    sdp: pc.localDescription
-                }));
-
-                pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(stuff).sdp));
-                pc.restartIce();
-                pc.createAnswer().then(a => pc.setLocalDescription(a)).then(a => console.log("answer created"));
-
-                console.log("here we are");
-                boolSet = true;
-
-                remoteElem.srcObject = remoteStream;
+                
+                  var desc = new RTCSessionDescription(JSON.parse(stuff).sdp);
+                
+                  //pc.setRemoteDescription(desc).then(function () {
+                  //  return navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+                  //})
+                  pc.setRemoteDescription(desc).then(function(stream) {
+                    //remoteStream = stream;
+                    remoteElem.srcObject = remoteStream;
+                
+                    //localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+                  })
+                  .then(function() {
+                    return pc.createAnswer();
+                  })
+                  .then(function(answer) {
+                    return pc.setLocalDescription(answer);
+                  })
+                  .then(function() {
+                    var message = {
+                      name: "remote",
+                      type: "video-answer",
+                      sdp: pc.localDescription
+                    };
+                
+                    socket.send(message);
+                  })
+                  .catch("ERROR");
               };
+              if(msg.type == "new-ice-candidate") {
+                var candidate = new RTCIceCandidate(msg.candidate);
+
+                pc.addIceCandidate(candidate)
+                  .catch("ICE ERROR");
+              }
 
               if(systemicRacism == 4) {
                 boolSet = true;
               };
-              if(isSharing && boolSet) {
+
+              if(msg.name == "remote" && isSharing && pc.remoteDescription == null) {
                 stuff = evt.data;
                 console.log("in isSharing Block")
                 console.log("stuff: " + stuff);
